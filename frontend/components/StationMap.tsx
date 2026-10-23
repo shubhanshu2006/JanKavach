@@ -96,25 +96,87 @@ export default function StationMap({
         preserveAspectRatio="xMidYMid meet"
         style={{ width: "100%", height: "100%", maxHeight: "100%", maxWidth: "100%", display: "block" }}
       >
-        {/* Range rings — the threshold ladder. Keyed by index, not value: two
-            adjacent thresholds (e.g. pre_warn_trigger and l3_trigger) are allowed
-            to be set equal, which would otherwise collide as a React key. */}
+        <defs>
+          <radialGradient id="radarDishGrad" cx="50%" cy="50%" r="50%">
+            <stop offset="0%" stopColor="#29FF8C" stopOpacity="0.06" />
+            <stop offset="60%" stopColor="#29FF8C" stopOpacity="0.02" />
+            <stop offset="100%" stopColor="#04070A" stopOpacity="0.85" />
+          </radialGradient>
+          <filter id="radarGlow" x="-20%" y="-20%" width="140%" height="140%">
+            <feGaussianBlur stdDeviation="3" result="blur" />
+            <feComposite in="SourceGraphic" in2="blur" operator="over" />
+          </filter>
+          <marker id="vecHead" markerWidth={6} markerHeight={6} refX={4} refY={3} orient="auto">
+            <path d="M0,0 L6,3 L0,6 Z" fill="var(--text-dim)" />
+          </marker>
+        </defs>
+
+        {/* Scope dish background */}
+        <circle cx={CX} cy={CY} r={R_MAX} fill="url(#radarDishGrad)" />
+
+        {/* Tactical Crosshair Axes & Quadrant Lines */}
+        <line x1={CX - R_MAX} y1={CY} x2={CX + R_MAX} y2={CY}
+          stroke="rgba(41,255,140,0.18)" strokeWidth={1} strokeDasharray="3 4" />
+        <line x1={CX} y1={CY - R_MAX} x2={CX} y2={CY + R_MAX}
+          stroke="rgba(41,255,140,0.18)" strokeWidth={1} strokeDasharray="3 4" />
+        <line x1={CX - R_MAX * 0.707} y1={CY - R_MAX * 0.707} x2={CX + R_MAX * 0.707} y2={CY + R_MAX * 0.707}
+          stroke="rgba(41,255,140,0.08)" strokeWidth={0.7} strokeDasharray="2 6" />
+        <line x1={CX - R_MAX * 0.707} y1={CY + R_MAX * 0.707} x2={CX + R_MAX * 0.707} y2={CY - R_MAX * 0.707}
+          stroke="rgba(41,255,140,0.08)" strokeWidth={0.7} strokeDasharray="2 6" />
+
+        {/* Range rings — the threshold ladder with clear visible contrast */}
         {ringValues.map((v, i) => (
           <circle key={i} cx={CX} cy={CY} r={densityToRadius(v)}
-            fill="none" stroke="var(--hair)" strokeWidth={1} />
+            fill="none" stroke="rgba(41,255,140,0.22)" strokeWidth={1} strokeDasharray="4 4" />
         ))}
-        <circle cx={CX} cy={CY} r={R_MAX} fill="none" stroke="var(--hair)" strokeWidth={1.5} />
 
-        {/* Threshold ladder labels, west side — staggered to prevent collision */}
+        {/* Outer boundary ring with high-visibility glow */}
+        <circle cx={CX} cy={CY} r={R_MAX + 1.5} fill="none" stroke="rgba(41,255,140,0.16)" strokeWidth={3} />
+        <circle cx={CX} cy={CY} r={R_MAX} fill="none" stroke="rgba(41,255,140,0.5)" strokeWidth={1.5} />
+
+        {/* Azimuth Rim Ticks (Every 15° & 30°) */}
+        {Array.from({ length: 24 }, (_, i) => {
+          const deg = i * 15;
+          const isMajor = deg % 30 === 0;
+          const pOuter = polar(deg, R_MAX);
+          const pInner = polar(deg, R_MAX - (isMajor ? 6.5 : 3.5));
+          return (
+            <line
+              key={`tick-${deg}`}
+              x1={pInner.x} y1={pInner.y} x2={pOuter.x} y2={pOuter.y}
+              stroke={isMajor ? "rgba(41,255,140,0.6)" : "rgba(41,255,140,0.25)"}
+              strokeWidth={isMajor ? 1.4 : 0.8}
+            />
+          );
+        })}
+
+        {/* Cardinal Compass Points */}
+        <text x={CX} y={CY - R_MAX - 6} textAnchor="middle" className="scope" fontSize={9} fontWeight={700} fill="var(--sweep)" letterSpacing="0.05em">N</text>
+        <text x={CX + R_MAX + 10} y={CY + 3} textAnchor="start" className="scope" fontSize={8} fontWeight={700} fill="rgba(41,255,140,0.7)" letterSpacing="0.05em">E</text>
+        <text x={CX} y={CY + R_MAX + 13} textAnchor="middle" className="scope" fontSize={8} fontWeight={700} fill="rgba(41,255,140,0.7)" letterSpacing="0.05em">S</text>
+        <text x={CX - R_MAX - 10} y={CY + 3} textAnchor="end" className="scope" fontSize={8} fontWeight={700} fill="rgba(41,255,140,0.7)" letterSpacing="0.05em">W</text>
+
+        {/* Threshold ladder labels, west side — crisp badges */}
         {!compact && ringValues.map((v, i) => {
           const r = densityToRadius(v);
-          const yOffset = i % 2 === 0 ? -3 : 9;
+          const yOffset = i % 2 === 0 ? -4 : 11;
+          const valStr = v.toFixed(1);
           return (
             <g key={i}>
-              <line x1={CX - r} y1={CY - 2} x2={CX - r} y2={CY + 2} stroke="var(--hair)" strokeWidth={1} />
-              <text key={i} x={CX - r - 4} y={CY + yOffset} textAnchor="end"
-                className="scope" fontSize={8.5} fill="var(--text-faint)" letterSpacing="0.05em">
-                {v.toFixed(1)}
+              <line x1={CX - r} y1={CY - 3} x2={CX - r} y2={CY + 3} stroke="rgba(41,255,140,0.5)" strokeWidth={1.2} />
+              <rect
+                x={CX - r - 26}
+                y={CY + yOffset - 8}
+                width={23}
+                height={10}
+                rx={2}
+                fill="rgba(4,7,10,0.88)"
+                stroke="rgba(41,255,140,0.3)"
+                strokeWidth={0.7}
+              />
+              <text x={CX - r - 15} y={CY + yOffset} textAnchor="middle"
+                className="scope" fontSize={8} fontWeight={700} fill="var(--sweep)" letterSpacing="0.02em">
+                {valStr}
               </text>
             </g>
           );
@@ -126,12 +188,13 @@ export default function StationMap({
           animate={{ rotate: 360 }}
           transition={{ duration: 7, repeat: Infinity, ease: "linear" }}
         >
-          {[18, 14, 10, 6, 3, 0].map((offset, i) => {
+          {[28, 24, 20, 16, 12, 9, 6, 3, 0].map((offset, i) => {
             const p = polar(-offset, R_MAX);
+            const isLead = offset === 0;
             return (
               <line key={i} x1={CX} y1={CY} x2={p.x} y2={p.y}
-                stroke="var(--sweep)" strokeWidth={offset === 0 ? 1.4 : 1}
-                opacity={offset === 0 ? 0.9 : 0.22 - i * 0.03} />
+                stroke="var(--sweep)" strokeWidth={isLead ? 1.8 : 1}
+                opacity={isLead ? 0.95 : 0.28 - i * 0.028} />
             );
           })}
         </motion.g>
@@ -147,22 +210,17 @@ export default function StationMap({
           if (Math.abs(from.x - to.x) < 1 && Math.abs(from.y - to.y) < 1) return null;
           return (
             <line key={`vec-${id}`} x1={from.x} y1={from.y} x2={to.x} y2={to.y}
-              stroke={BORDER_MAP[pred.t90.color]} strokeWidth={1.4}
-              strokeDasharray="2 3" opacity={0.75} markerEnd="url(#vecHead)" />
+              stroke={BORDER_MAP[pred.t90.color]} strokeWidth={1.5}
+              strokeDasharray="2 3" opacity={0.8} markerEnd="url(#vecHead)" />
           );
         })}
 
-        <defs>
-          <marker id="vecHead" markerWidth={6} markerHeight={6} refX={4} refY={3} orient="auto">
-            <path d="M0,0 L6,3 L0,6 Z" fill="var(--text-dim)" />
-          </marker>
-        </defs>
-
         {/* Center Hub — Station Threat Level */}
-        <motion.circle cx={CX} cy={CY} r={HUB_R}
-          fill={threat.color + "18"} stroke={threat.color} strokeWidth={1.8}
+        <motion.circle cx={CX} cy={CY} r={HUB_R + 2}
+          fill={threat.color + "18"} stroke={threat.color} strokeWidth={2}
           animate={isThreatCritical ? { opacity: [1, 0.45, 1], scale: [1, 1.05, 1] } : {}}
           transition={{ duration: 0.9, repeat: Infinity }} />
+        <circle cx={CX} cy={CY} r={HUB_R - 3} fill="none" stroke="rgba(41,255,140,0.18)" strokeWidth={1} strokeDasharray="2 2" />
         <text x={CX} y={CY - 12} textAnchor="middle" className="scope" fontSize={7}
           fill="var(--text-faint)" letterSpacing="0.1em">STATION</text>
         <text x={CX} y={CY - 3} textAnchor="middle" className="scope" fontSize={7}
@@ -176,6 +234,7 @@ export default function StationMap({
           const state = zones[id];
           const color = BORDER_MAP[state?.color ?? "green"];
           const critical = state?.color === "critical";
+          const elevated = state?.color === "amber" || state?.color === "red";
           const r = densityToRadius(state?.density ?? 0);
           const p = polar(bearing, r);
           const isRight = Math.sin((bearing * Math.PI) / 180) >= -0.05;
@@ -183,15 +242,29 @@ export default function StationMap({
           const lp = polar(bearing, labelR);
           const gate = id.startsWith("GATE_") ? (gateStates[id] ?? "open") : null;
           const escReversed = id === "FOB1" ? esc1Reversed : id === "FOB2" ? esc2Reversed : false;
+          const zoneLabel = config?.zones.find((z) => z.id === id)?.short_label ?? id;
+          const densityVal = (state?.density ?? 0).toFixed(1);
 
           return (
             <g key={id}>
-              {critical && (
-                <motion.circle cx={p.x} cy={p.y} r={9} fill="none" stroke={color} strokeWidth={1.5}
-                  animate={{ scale: [1, 1.9], opacity: [0.8, 0] }}
-                  transition={{ duration: 1, repeat: Infinity }} style={{ transformOrigin: `${p.x}px ${p.y}px` }} />
+              {/* Leader hairline connecting blip to label */}
+              <line
+                x1={p.x} y1={p.y}
+                x2={lp.x + (isRight ? -2 : 2)} y2={lp.y}
+                stroke={color} strokeWidth={0.8} strokeDasharray="2 2" opacity={0.6}
+              />
+
+              {/* Pulsing ring for critical/elevated */}
+              {(critical || elevated) && (
+                <motion.circle cx={p.x} cy={p.y} r={10} fill="none" stroke={color} strokeWidth={1.5}
+                  animate={{ scale: [1, critical ? 2.2 : 1.7], opacity: [0.85, 0] }}
+                  transition={{ duration: critical ? 0.9 : 1.4, repeat: Infinity }} style={{ transformOrigin: `${p.x}px ${p.y}px` }} />
               )}
-              <circle cx={p.x} cy={p.y} r={5} fill={color} stroke="var(--bg)" strokeWidth={1} />
+
+              {/* Target reticle halo */}
+              <circle cx={p.x} cy={p.y} r={7.5} fill="none" stroke={color} strokeWidth={0.8} opacity={0.45} />
+              {/* Core blip dot */}
+              <circle cx={p.x} cy={p.y} r={4.5} fill={color} stroke="#04070A" strokeWidth={1.2} />
 
               {id === "FOB1" && (
                 <TriangleAlert
@@ -200,13 +273,18 @@ export default function StationMap({
                   size={compact ? 9 : 11} color="var(--prewarn)" strokeWidth={2}
                 />
               )}
+
+              {/* Zone Label with backdrop shadow for high readability */}
               <text x={lp.x} y={lp.y - 3} textAnchor={isRight ? "start" : "end"}
-                className="scope" fontSize={compact ? 8 : 9.5} fill="var(--text-dim)" letterSpacing="0.04em">
-                {config?.zones.find((z) => z.id === id)?.short_label ?? id}
+                className="scope" fontSize={compact ? 8.5 : 10} fontWeight={600} fill="var(--text)" letterSpacing="0.04em"
+                style={{ filter: "drop-shadow(0 1px 3px rgba(0,0,0,0.9))" }}>
+                {zoneLabel}
               </text>
+              {/* Density Value with glowing colored readout */}
               <text x={lp.x} y={lp.y + (compact ? 8 : 10)} textAnchor={isRight ? "start" : "end"}
-                className="scope" fontWeight={700} fontSize={compact ? 10 : 12} fill={color}>
-                {(state?.density ?? 0).toFixed(1)}
+                className="scope" fontWeight={700} fontSize={compact ? 10.5 : 12.5} fill={color}
+                style={{ filter: `drop-shadow(0 0 4px ${color}88)` }}>
+                {densityVal}
               </text>
 
               {gate && gate !== "open" && (
@@ -228,3 +306,4 @@ export default function StationMap({
     </div>
   );
 }
+

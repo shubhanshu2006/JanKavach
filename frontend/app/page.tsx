@@ -1,12 +1,13 @@
 "use client";
 import { useState, useEffect, useRef, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Play, Video, Wifi, WifiOff, RefreshCw, Settings } from "lucide-react";
+import { Play, Video, Wifi, WifiOff, RefreshCw, Settings, ShieldCheck, ChevronDown, ChevronUp } from "lucide-react";
 import { useLiveData } from "@/lib/websocket";
 import { API_URL, BORDER_MAP } from "@/lib/constants";
 import { useStationConfig } from "@/lib/config-context";
 import StationMap from "@/components/StationMap";
 import SettingsPanel from "@/components/SettingsPanel";
+import AuditDossierModal from "@/components/AuditDossierModal";
 import VideoSourcePicker, { VideoSource } from "@/components/VideoSourcePicker";
 import InterventionFeed from "@/components/InterventionFeed";
 import ThresholdConfirmCard from "@/components/ThresholdConfirmCard";
@@ -43,6 +44,7 @@ export default function Home() {
   const { data, connected } = useLiveData();
   const [view, setView]       = useState<View>("dashboard");
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [auditOpen, setAuditOpen] = useState(false);
   const [historyMap, setHistoryMap] = useState<Record<string, number[]>>({});
   const [clock, setClock]     = useState("");
   const [liveMode, setLiveMode] = useState<"scenario" | "video">("scenario");
@@ -60,6 +62,54 @@ export default function Home() {
   const [phoneNotif, setPhoneNotif] = useState<{ title: string; body: string; level: string } | null>(null);
   const [activeSos, setActiveSos]   = useState<Intervention | null>(null);
   const [demoMaxLevel, setDemoMaxLevel] = useState(5);
+
+  // Draggable Zone Density Matrix height & collapse state
+  const [matrixHeight, setMatrixHeight] = useState<number>(170);
+  const [isDraggingMatrix, setIsDraggingMatrix] = useState<boolean>(false);
+  const lastExpandedHeightRef = useRef<number>(180);
+  const dragStartYRef = useRef<number>(0);
+  const dragStartHeightRef = useRef<number>(180);
+
+  const handlePointerDown = useCallback((e: React.PointerEvent) => {
+    e.preventDefault();
+    setIsDraggingMatrix(true);
+    dragStartYRef.current = e.clientY;
+    dragStartHeightRef.current = matrixHeight;
+  }, [matrixHeight]);
+
+  useEffect(() => {
+    if (!isDraggingMatrix) return;
+
+    const handlePointerMove = (e: PointerEvent) => {
+      const deltaY = e.clientY - dragStartYRef.current;
+      const newH = Math.max(34, Math.min(420, dragStartHeightRef.current - deltaY));
+      setMatrixHeight(newH);
+      if (newH > 45) {
+        lastExpandedHeightRef.current = newH;
+      }
+    };
+
+    const handlePointerUp = () => {
+      setIsDraggingMatrix(false);
+    };
+
+    window.addEventListener("pointermove", handlePointerMove);
+    window.addEventListener("pointerup", handlePointerUp);
+    return () => {
+      window.removeEventListener("pointermove", handlePointerMove);
+      window.removeEventListener("pointerup", handlePointerUp);
+    };
+  }, [isDraggingMatrix]);
+
+  const toggleMatrixCollapse = useCallback(() => {
+    if (matrixHeight <= 40) {
+      setMatrixHeight(lastExpandedHeightRef.current || 180);
+    } else {
+      lastExpandedHeightRef.current = matrixHeight;
+      setMatrixHeight(34);
+    }
+  }, [matrixHeight]);
+
   const paShownIds    = useRef<Set<string>>(new Set());
   const phoneShownIds = useRef<Set<string>>(new Set());
   const sosShownIds   = useRef<Set<string>>(new Set());
@@ -416,6 +466,24 @@ export default function Home() {
 
         <Divider />
 
+        <button
+          onClick={() => setAuditOpen(true)}
+          title="CRS Statutory Audit & Black-Box Dossier"
+          style={{
+            display: "flex", alignItems: "center", gap: 5,
+            height: 26, padding: "0 8px", fontSize: 10,
+            background: "rgba(16, 185, 129, 0.12)",
+            color: "#34D399",
+            border: "1px solid rgba(16, 185, 129, 0.35)",
+            borderRadius: 4,
+            cursor: "pointer",
+            fontWeight: 600,
+            letterSpacing: "0.08em",
+          }}
+        >
+          <ShieldCheck size={12} strokeWidth={2} /> CRS AUDIT
+        </button>
+
         <button onClick={() => setSettingsOpen(true)} title="Station configuration" style={{ background: "none", border: "none", cursor: "pointer" }}>
           <Settings size={16} color="var(--text-dim)" />
         </button>
@@ -446,7 +514,7 @@ export default function Home() {
                         )}
                       </div>
                       <div style={{
-                        flex: 1, minHeight: 0, padding: 8,
+                        flex: 1, minHeight: 0, padding: "2px 6px",
                         overflow: "hidden", display: "flex", alignItems: "center", justifyContent: "center",
                         position: "relative"
                       }}>
@@ -523,11 +591,148 @@ export default function Home() {
                       </AnimatePresence>
                     </div>
 
-                    {/* Zone density chart */}
-                    <div className="panel" style={{ flexShrink: 0, overflow: "hidden" }}>
-                      <div className="panel-title">ZONE DENSITY MATRIX — 30s ROLLING</div>
-                      <ZoneChart zones={zones} historyMap={historyMap} />
+                    {/* Resizable Divider Handle between Radar and Zone Matrix */}
+                    <div
+                      className={`radar-divider-handle ${isDraggingMatrix ? "dragging" : ""}`}
+                      onPointerDown={handlePointerDown}
+                      onDoubleClick={toggleMatrixCollapse}
+                      title="Drag up/down to resize radar vs zone matrix • Double-click to collapse/expand"
+                      style={{
+                        height: 10,
+                        margin: "1px 0",
+                        cursor: "ns-resize",
+                        userSelect: "none",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        position: "relative",
+                        zIndex: 10,
+                      }}
+                    >
+                      <div style={{
+                        width: 52,
+                        height: 4,
+                        borderRadius: 2,
+                        background: isDraggingMatrix ? "var(--sweep)" : "var(--hair)",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        gap: 3,
+                        transition: "all 0.15s ease",
+                      }}>
+                        <span style={{ width: 2, height: 2, borderRadius: 1, background: isDraggingMatrix ? "#04070A" : "var(--text-faint)" }} />
+                        <span style={{ width: 2, height: 2, borderRadius: 1, background: isDraggingMatrix ? "#04070A" : "var(--text-faint)" }} />
+                        <span style={{ width: 2, height: 2, borderRadius: 1, background: isDraggingMatrix ? "#04070A" : "var(--text-faint)" }} />
+                      </div>
                     </div>
+
+                    {/* Zone density chart - resizable/collapsible card */}
+                    <div
+                      className="panel"
+                      style={{
+                        height: matrixHeight,
+                        minHeight: matrixHeight,
+                        maxHeight: matrixHeight,
+                        flexShrink: 0,
+                        overflow: "hidden",
+                        display: "flex",
+                        flexDirection: "column",
+                        transition: isDraggingMatrix ? "none" : "height 0.18s cubic-bezier(0.16, 1, 0.3, 1)",
+                      }}
+                    >
+                      <div
+                        className="panel-title"
+                        style={{
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "space-between",
+                          padding: "5px 12px",
+                          cursor: "pointer",
+                          userSelect: "none",
+                        }}
+                        onClick={toggleMatrixCollapse}
+                      >
+                        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                          <span>ZONE DENSITY MATRIX — 30s ROLLING</span>
+                          {matrixHeight <= 40 && (
+                            <span style={{
+                              fontSize: 9,
+                              color: "var(--sweep)",
+                              background: "rgba(41,255,140,0.12)",
+                              border: "1px solid rgba(41,255,140,0.3)",
+                              padding: "1px 6px",
+                              borderRadius: 3,
+                              letterSpacing: "0.08em"
+                            }}>
+                              COLLAPSED · RADAR MAXIMIZED
+                            </span>
+                          )}
+                        </div>
+
+                        <div style={{ display: "flex", alignItems: "center", gap: 5 }} onClick={(e) => e.stopPropagation()}>
+                          <button
+                            className="btn-seg scope"
+                            onClick={() => {
+                              if (matrixHeight > 40) lastExpandedHeightRef.current = matrixHeight;
+                              setMatrixHeight(34);
+                            }}
+                            title="Collapse (Maximum Radar space)"
+                            style={{
+                              fontSize: 9, padding: "2px 6px",
+                              background: matrixHeight <= 40 ? "rgba(41,255,140,0.2)" : "transparent",
+                              color: matrixHeight <= 40 ? "var(--sweep)" : "var(--text-faint)",
+                              border: `1px solid ${matrixHeight <= 40 ? "var(--sweep)" : "var(--hair)"}`,
+                            }}
+                          >
+                            MIN
+                          </button>
+                          <button
+                            className="btn-seg scope"
+                            onClick={() => setMatrixHeight(135)}
+                            title="Compact view (135px)"
+                            style={{
+                              fontSize: 9, padding: "2px 6px",
+                              background: matrixHeight > 40 && matrixHeight < 200 ? "rgba(41,255,140,0.2)" : "transparent",
+                              color: matrixHeight > 40 && matrixHeight < 200 ? "var(--sweep)" : "var(--text-faint)",
+                              border: `1px solid ${matrixHeight > 40 && matrixHeight < 200 ? "var(--sweep)" : "var(--hair)"}`,
+                            }}
+                          >
+                            MID
+                          </button>
+                          <button
+                            className="btn-seg scope"
+                            onClick={() => setMatrixHeight(260)}
+                            title="Full view (260px)"
+                            style={{
+                              fontSize: 9, padding: "2px 6px",
+                              background: matrixHeight >= 200 ? "rgba(41,255,140,0.2)" : "transparent",
+                              color: matrixHeight >= 200 ? "var(--sweep)" : "var(--text-faint)",
+                              border: `1px solid ${matrixHeight >= 200 ? "var(--sweep)" : "var(--hair)"}`,
+                            }}
+                          >
+                            FULL
+                          </button>
+                          <button
+                            className="btn-seg"
+                            onClick={toggleMatrixCollapse}
+                            title={matrixHeight <= 40 ? "Expand" : "Collapse"}
+                            style={{
+                              background: "transparent", border: "none", color: "var(--text-dim)",
+                              display: "flex", alignItems: "center", cursor: "pointer", padding: "1px 3px"
+                            }}
+                          >
+                            {matrixHeight <= 40 ? <ChevronUp size={13} /> : <ChevronDown size={13} />}
+                          </button>
+                        </div>
+                      </div>
+
+                      {matrixHeight > 40 && (
+                        <div style={{ flex: 1, minHeight: 0, overflowY: "auto" }} className="scrollbar-thin">
+                          <ZoneChart zones={zones} historyMap={historyMap} />
+                        </div>
+                      )}
+                    </div>
+
                   </>
                 ) : (
                   /* Video mode: full tracking split view */
@@ -664,6 +869,10 @@ export default function Home() {
         open={pickerOpen}
         onClose={() => setPickerOpen(false)}
         onSelect={(source) => { startLive(source); setPickerOpen(false); }}
+      />
+      <AuditDossierModal
+        isOpen={auditOpen}
+        onClose={() => setAuditOpen(false)}
       />
     </div>
     </>

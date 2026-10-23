@@ -19,13 +19,16 @@ const STATUS_META: Record<string, { label: string; bg: string }> = {
 export default function ZoneChart({ zones, historyMap }: Props) {
   const { config } = useStationConfig();
   return (
-    <div style={{ overflowX: "auto" }}>
+    <div style={{ overflowX: "auto", minWidth: 320 }}>
       <div className="scope" style={{
         display: "flex", alignItems: "center",
         padding: "5px 14px",
         fontSize: 9, color: "var(--text-faint)", letterSpacing: "0.1em",
         borderBottom: "1px solid var(--hair-dim)",
         background: "var(--panel-2)",
+        position: "sticky",
+        top: 0,
+        zIndex: 2,
       }}>
         <span style={{ width: 90 }}>ZONE</span>
         <span style={{ width: 84, textAlign: "right" }}>DENSITY</span>
@@ -33,6 +36,7 @@ export default function ZoneChart({ zones, historyMap }: Props) {
         <span style={{ flex: 1, textAlign: "center" }}>30s TREND</span>
         <span style={{ width: 54, textAlign: "right" }}>STATUS</span>
       </div>
+
 
       {TRACKED.map(zid => {
         const state = zones[zid];

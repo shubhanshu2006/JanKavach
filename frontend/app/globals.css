@@ -112,3 +112,18 @@ header { flex-wrap: nowrap !important; overflow: hidden; }
 @media (max-width: 1299px) {
   .station-ident { display: none !important; }
 }
+
+/* Radar scope draggable divider handle */
+.radar-divider-handle {
+  user-select: none;
+  touch-action: none;
+}
+.radar-divider-handle:hover > div,
+.radar-divider-handle.dragging > div {
+  background: var(--sweep) !important;
+  box-shadow: 0 0 10px var(--sweep-glow) !important;
+}
+.radar-divider-handle:hover {
+  background: rgba(41, 255, 140, 0.05);
+}
+
