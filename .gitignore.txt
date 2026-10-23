@@ -1,0 +1,64 @@
+# Internal research docs — do not push
+problem_validation.md
+problem_validation.docx
+AGENT_RULES.md
+convert_md_to_docx.py
+
+# Virtual environments
+venv/
+.venv/
+env/
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.Python
+*.egg-info/
+dist/
+build/
+.eggs/
+venv/
+.venv/
+env/
+*.env
+backend/config/station.config.json
+
+# Models — downloaded automatically by ultralytics on first run
+*.pt
+*.pth
+
+# Models — downloaded automatically by ultralytics on first run
+# (videos are committed for demo reproducibility)
+
+# Node
+node_modules/
+.next/
+out/
+.npm/
+*.tsbuildinfo
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# IDE
+.vscode/
+.idea/
+*.suo
+*.user
+
+# Logs
+*.log
+logs/
+
+# Editor temp files
+*.tmp
+*.tmp.*
+
+# Environment
+.env
+.env.local
+.env.production
