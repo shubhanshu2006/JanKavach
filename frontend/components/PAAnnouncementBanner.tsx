@@ -20,13 +20,19 @@ export default function PAAnnouncementBanner({ message, zone, onDismiss }: Props
     <AnimatePresence>
       {message && (
         <motion.div
-          initial={{ y: 80, opacity: 0 }}
+          initial={{ y: -60, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
-          exit={{ y: 80, opacity: 0 }}
-          transition={{ type: "spring", damping: 22, stiffness: 220 }}
-          className="fixed bottom-3 left-3 right-3 z-50 pointer-events-none"
+          exit={{ y: -60, opacity: 0 }}
+          transition={{ type: "spring", damping: 24, stiffness: 240 }}
+          className="fixed top-14 left-1/2 -translate-x-1/2 z-50 pointer-events-none w-[92%] max-w-2xl px-4"
         >
-          <div className="panel scope mx-auto max-w-2xl px-4 py-3" style={{ borderColor: "var(--amber)" }}>
+          <div className="panel scope mx-auto px-4 py-3" style={{
+            borderColor: "var(--amber)",
+            borderRadius: 6,
+            background: "rgba(8,15,18,0.95)",
+            backdropFilter: "blur(12px)",
+            boxShadow: "0 8px 32px rgba(0,0,0,0.8), 0 0 20px rgba(255,176,32,0.2)",
+          }}>
             <div className="flex items-center gap-4">
               <div className="relative shrink-0 w-9 h-9 flex items-center justify-center">
                 <Megaphone size={16} color="var(--amber)" strokeWidth={1.75} className="z-10" />

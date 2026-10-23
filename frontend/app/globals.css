@@ -60,19 +60,21 @@ body {
 .scrollbar-thin::-webkit-scrollbar-thumb { background: var(--hair); }
 .scrollbar-thin::-webkit-scrollbar-thumb:hover { background: var(--text-faint); }
 
-/* Instrument panel chrome — flat, hard-edged, one hairline, no glass */
+/* Instrument panel chrome — high-tech, subtle depth, crisp hairline */
 .panel {
   background: var(--panel);
   border: 1px solid var(--hair);
+  border-radius: 4px;
 }
 .panel-title {
-  padding: 6px 12px;
+  padding: 7px 14px;
   border-bottom: 1px solid var(--hair-dim);
   background: var(--panel-2);
   font-family: 'Share Tech Mono', monospace;
   font-size: 10px;
+  font-weight: 600;
   color: var(--text-mute);
-  letter-spacing: 0.16em;
+  letter-spacing: 0.14em;
   text-transform: uppercase;
 }
 
@@ -81,10 +83,17 @@ button:disabled { cursor: not-allowed; opacity: 0.5; }
 
 .btn-seg {
   cursor: pointer;
-  transition: filter 0.12s ease;
+  transition: all 0.15s cubic-bezier(0.16, 1, 0.3, 1);
+  border-radius: 3px;
 }
-.btn-seg:hover:not(:disabled) { filter: brightness(1.35); }
-.btn-seg:active:not(:disabled) { filter: brightness(0.8); }
+.btn-seg:hover:not(:disabled) {
+  filter: brightness(1.25);
+  box-shadow: 0 0 8px rgba(41,255,140,0.15);
+}
+.btn-seg:active:not(:disabled) {
+  filter: brightness(0.85);
+  transform: translateY(0.5px);
+}
 
 .cctv-tile { transition: border-color 0.12s ease, filter 0.12s ease; }
 .cctv-tile:hover { border-color: var(--sweep, #29FF8C); filter: brightness(1.15); }
