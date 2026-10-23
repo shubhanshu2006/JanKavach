@@ -85,6 +85,37 @@ This turns the FOB-3 scenario from a one-off demo into a template: any station's
 
 ---
 
+## Statutory Black-Box Flight Recorder (CRS Audit Compliant)
+
+Following any crowd incident on Indian Railways, the **Commission of Railway Safety (CRS)** conducts a statutory judicial inquiry under the Railways Act, 1989. To establish legal accountability, verify sub-second response times, and prevent retroactive tampering, JanKavach incorporates a **cryptographic Write-Once-Read-Many (WORM) "Black-Box" Flight Recorder** (`backend/audit/flight_recorder.py`).
+
+### 1. Cryptographic Blockchain-Style Hash Chain
+Every system decision, sensor reading, autonomous action, and human confirmation is cryptographically chained using **SHA-256**:
+- **WORM Log File:** Stored in append-only JSONL format (`data/audit_logs/CRS_{STATION}_{TIMESTAMP}.jsonl`).
+- **Genesis Block:** Each session opens with statutory metadata (`station_code`, `division`, `zone`, `standards_compliance: ["NDMA-CrowdSafety-2014", "RDSO-IR-PIDS", "CRS-Statutory-Audit"]`).
+- **Tamper Evidence:** Every event embeds the cryptographic hash of the preceding block (`prev_hash`). Any manual alteration (e.g. attempting to doctor an operator response time or delete a warning) permanently invalidates all subsequent block hashes and is flagged during verification.
+
+### 2. Forensic CCTV Evidentiary Watermarking
+When critical threshold events trigger (`L1`, `L2`, `PRE-WARN`, `L3`, `SOS`), the **Forensic Snapshot Engine** (`backend/audit/snapshot_engine.py`) captures high-resolution video frames and burns an indelible statutory watermark directly into the image:
+- **Header:** `JAN-KAVACH STATUTORY CRS AUDIT DOSSIER`
+- **Telemetry Bar:** Station, Zone, Density reading (`e.g. 5.0/m²`), Timestamp (IST)
+- **Cryptographic Seal:** SHA-256 payload hash stamped directly on the image
+- Saved under `data/snapshots/` for evidentiary preservation.
+
+### 3. Statutory Verification & Audit Dossier UI
+- **Interactive UI Modal:** Click the `CRS COMPLIANT · WORM LEDGER` badge on the dashboard header to open the **Statutory Incident Flight Recorder Modal** (`components/AuditDossierModal.tsx`).
+  - **Historical Archive:** Select any past session log from the dropdown to review historical incident timelines.
+  - **On-Demand Verification:** Click **Verify Hash Chain** to run a live cryptographic audit check across all ledger blocks.
+  - **Forensic Snapshot Gallery:** View watermarked CCTV snapshots in full-resolution lightbox modal.
+  - **Dossier Export:** Export a legally admissible CRS Statutory Dossier (`GET /audit/dossier`).
+- **Independent Verification CLI Tool:** Investigators can independently verify any log file offline without running the frontend:
+  ```bash
+  python backend/verify_audit.py --log data/audit_logs/CRS_NDLS_20261023_232755.jsonl
+  ```
+
+---
+
+
 ## Tech Stack
 
 | Layer | Technology | Why |
@@ -94,6 +125,7 @@ This turns the FOB-3 scenario from a one-off demo into a template: any station's
 | **Object Tracking** | ByteTrack (built into Ultralytics) | Persistent IDs across frames for flow-vector computation |
 | **Flow Prediction** | Rule-based crowd flow extrapolation | 90-second density forecast, convergence detection, fully auditable |
 | **Decision Engine** | Custom 5-level graded intervention engine | Sequential escalation with the PRE-WARN → SOS guarantee |
+| **Audit Ledger** | Cryptographic SHA-256 WORM Hash Chain + Pillow Watermarking | Legally admissible black-box flight recorder for CRS inquiries |
 | **Station Config** | Pydantic schema + validated store | No-code zones/thresholds/views, backed by 32 backend tests |
 | **Backend** | FastAPI + WebSocket (Python) | 200ms broadcast loop, dual-engine (JanKavach vs. Human) comparison |
 | **Frontend** | Next.js 14 + Framer Motion | Real-time dashboard, split-screen comparison, live tracking view |
@@ -115,10 +147,12 @@ This turns the FOB-3 scenario from a one-off demo into a template: any station's
 ## Engineering Rigor
 
 - **32 backend tests** covering the config schema, config store, decision engine under custom configs, scenario runner, and vision pipeline — `cd backend && pytest`
+- **Cryptographic WORM Audit Trail** — every telemetry point, autonomous trigger, and operator confirmation is appended to a SHA-256 hash-chained JSONL flight recorder with statutory CCTV frame watermarking; independently verifiable via `backend/verify_audit.py`
 - **Single source of truth for thresholds** — `constants.py` for the shipped defaults, `config/schema.py` for anything an operator changes at runtime; the decision engine never hardcodes a density number
 - **Config validation, not just UI validation** — zone/category references, unique zone IDs, threshold ordering, and minimum threshold gaps are all enforced server-side by Pydantic, so a malformed config can't reach the engine
 - **No hardcoded response times** — every "response time" shown in the intervention feed is computed from the system clock at fire time
 - **Real inference in live mode** — YOLOv8m + SAHI actually run on the selected video; nothing is mocked or replayed from a cached detection log
+
 
 ---
 
@@ -130,6 +164,11 @@ jankavach/
 │   ├── main.py                  # FastAPI + WebSocket server, dual-engine broadcast, live/scenario mode switch
 │   ├── constants.py              # Shipped default thresholds (single source of truth)
 │   ├── requirements.txt
+│   ├── audit/
+│   │   ├── __init__.py           # Package exports for flight recorder & snapshot engine
+│   │   ├── flight_recorder.py    # Append-only SHA-256 WORM black-box audit ledger
+│   │   └── snapshot_engine.py    # Forensic CCTV frame capture with statutory watermark
+│   ├── verify_audit.py           # Standalone CRS cryptographic verification CLI tool
 │   ├── config/
 │   │   ├── schema.py             # Pydantic models + validation for zones/thresholds/categories/views
 │   │   ├── defaults.py           # NDLS out-of-the-box StationConfig
@@ -152,6 +191,7 @@ jankavach/
 │   │   ├── page.tsx              # Main dashboard, mode switching, demo controls
 │   │   └── layout.tsx
 │   ├── components/
+│   │   ├── AuditDossierModal.tsx     # CRS Statutory Flight Recorder & forensic snapshot viewer
 │   │   ├── SplitScreen.tsx           # Human vs. JanKavach comparison panel
 │   │   ├── VideoTrackingView.tsx     # Raw feed + AI tracking overlay (live mode)
 │   │   ├── VideoSourcePicker.tsx     # CCTV-wall multi-camera source picker
@@ -172,6 +212,8 @@ jankavach/
 │       ├── types.ts              # LiveUpdate, Intervention, StationConfig types
 │       └── constants.ts          # Level colors, zone metadata
 ├── data/
+│   ├── audit_logs/               # SHA-256 chained WORM audit logs (CRS_*.jsonl)
+│   ├── snapshots/                # Statutory watermarked forensic CCTV captures
 │   └── videos/                   # Stock footage — CCTV-wall sources for live mode
 ├── PRD.md                        # Full product requirements
 ├── APP_FLOW.md                   # System architecture and data flow
@@ -235,6 +277,20 @@ cd backend
 pytest
 ```
 
+### 7. Verify Statutory Audit Log (CRS Flight Recorder)
+
+Verify the cryptographic integrity of any incident audit log offline:
+
+```bash
+# Verify the active or most recent session log
+python backend/verify_audit.py
+
+# Or verify a specific historical incident log
+python backend/verify_audit.py --log data/audit_logs/CRS_NDLS_20261023_232755.jsonl
+```
+
+Outputs total verified blocks, SHA-256 integrity checks, and CRS statutory compliance report.
+
 ---
 
 ## API Reference
@@ -247,6 +303,10 @@ pytest
 | `POST /intervention/{id}/confirm` · `/intervention/{id}/cancel` | Resolve a staged L2/L3 intervention |
 | `GET /config` · `PUT /config` · `POST /config/reset` | Read, update, or reset the station configuration |
 | `GET /config/thresholds/defaults` | The NDLS out-of-the-box threshold values |
+| `GET /audit/summary` · `GET /audit/sessions` | Real-time audit metrics and list of historical session logs |
+| `GET /audit/dossier` · `POST /audit/verify` | Complete CRS incident dossier and SHA-256 hash-chain validation |
+| `GET /snapshots/{filename}` | Retrieve statutory watermarked forensic CCTV frames |
+
 
 ---
 

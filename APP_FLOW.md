@@ -299,4 +299,49 @@ app/page.tsx  (state: view, historyMap, clock, WebSocket data)
                ├── Left panel  — human timeline (interventions suppressed)
                ├── Right panel — JanKavach timeline (full autonomy)
                └── Bottom bar  — response time + outcome comparison
+
+---
+
+## 7. Statutory Black-Box Flight Recorder & Forensic Audit Flow
+
 ```
+┌─────────────────────────────────────────────────────────────────────────────┐
+│             STATUTORY "BLACK-BOX" FLIGHT RECORDER ARCHITECTURE              │
+│                                                                               │
+│  Decision Engine / Vision Pipeline / Human Confirmations                      │
+│         │                                                                     │
+│         ├─────────────────────────────┬─────────────────────────────┐         │
+│         ▼                             ▼                             ▼         │
+│  [Autonomous Action]        [Human Confirmation]           [Critical Tier]   │
+│  L1 PA Announcement         L2 Escalator Direction          L1, L2, PRE-WARN, │
+│  Signage Routing Change     L3 Platform Closure Gate        L3, SOS Alert     │
+│         │                             │                             │         │
+│         ▼                             ▼                             ▼         │
+│  ┌──────────────────────────────────────────────┐          ┌────────────────┐ │
+│  │ flight_recorder.py (WORM Audit Ledger)       │          │ snapshot_engine│ │
+│  │                                              │          │ .py            │ │
+│  │ 1. Canonical JSON representation             │          │                │ │
+│  │ 2. Embeds prev_hash (Blockchain-style chain) │          │ 1. CCTV Frame  │ │
+│  │ 3. Computes SHA-256 hash                     │          │ 2. Burns legal │ │
+│  │ 4. Appends to data/audit_logs/CRS_*.jsonl    │          │    watermark   │ │
+│  └──────────────────────┬───────────────────────┘          │ 3. Writes JPEG │ │
+│                         │                                  └────────┬───────┘ │
+│                         │                                           │         │
+│                         ▼                                           ▼         │
+│            data/audit_logs/CRS_*.jsonl                     data/snapshots/    │
+│            (Immutable Event Sequence)                      (Forensic Proof)   │
+│                         │                                           │         │
+│         ┌───────────────┴───────────────────────────┬───────────────┘         │
+│         ▼                                           ▼                         │
+│  ┌──────────────────────────────┐        ┌──────────────────────────────────┐ │
+│  │ backend/verify_audit.py      │        │ AuditDossierModal.tsx            │ │
+│  │ Standalone CLI Tool          │        │ Statutory Forensic UI            │ │
+│  │                              │        │                                  │ │
+│  │ • Re-hashes every block      │        │ • Live SHA-256 hash verification │ │
+│  │ • Detects log tampering      │        │ • Historical incident selector   │ │
+│  │ • CRS Compliance Summary     │        │ • Forensic snapshot lightbox     │ │
+│  │ • Exits 0 (Valid) / 1 (Tamper│        │ • 1-Click JSON Dossier Export    │ │
+│  └──────────────────────────────┘        └──────────────────────────────────┘ │
+└─────────────────────────────────────────────────────────────────────────────┘
+```
+
