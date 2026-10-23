@@ -23,11 +23,11 @@ export default function PhoneNotification({ notification, onDismiss }: Props) {
     <AnimatePresence>
       {notification && (
         <motion.div
-          initial={{ y: 200, x: 40, opacity: 0 }}
-          animate={{ y: 0, x: 0, opacity: 1 }}
-          exit={{ y: 200, opacity: 0 }}
-          transition={{ type: "spring", damping: 18, stiffness: 180 }}
-          className="fixed bottom-24 right-4 z-50 pointer-events-none"
+          initial={{ y: 30, opacity: 0, scale: 0.95 }}
+          animate={{ y: 0, opacity: 1, scale: 1 }}
+          exit={{ y: 30, opacity: 0, scale: 0.95 }}
+          transition={{ type: "spring", damping: 20, stiffness: 200 }}
+          className="pointer-events-none"
         >
           {/* Phone frame — a diegetic device, not the scope's own chrome */}
           <div className="relative w-52 bg-[#0c0e0f] rounded-[28px] border-4 border-[#1c1f1f] shadow-2xl shadow-black/60 overflow-hidden p-1">

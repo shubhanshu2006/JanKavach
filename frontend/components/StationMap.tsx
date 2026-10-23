@@ -90,8 +90,12 @@ export default function StationMap({
   const isThreatCritical = resolvedStatus === "critical";
 
   return (
-    <div style={{ position: "relative", width: "100%" }}>
-      <svg viewBox="0 0 560 560" style={{ width: "100%", height: "auto", display: "block" }}>
+    <div style={{ position: "relative", width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center", minHeight: 0 }}>
+      <svg
+        viewBox="-24 -20 608 600"
+        preserveAspectRatio="xMidYMid meet"
+        style={{ width: "100%", height: "100%", maxHeight: "100%", maxWidth: "100%", display: "block" }}
+      >
         {/* Range rings — the threshold ladder. Keyed by index, not value: two
             adjacent thresholds (e.g. pre_warn_trigger and l3_trigger) are allowed
             to be set equal, which would otherwise collide as a React key. */}
@@ -101,14 +105,18 @@ export default function StationMap({
         ))}
         <circle cx={CX} cy={CY} r={R_MAX} fill="none" stroke="var(--hair)" strokeWidth={1.5} />
 
-        {/* Threshold ladder labels, west side */}
+        {/* Threshold ladder labels, west side — staggered to prevent collision */}
         {!compact && ringValues.map((v, i) => {
           const r = densityToRadius(v);
+          const yOffset = i % 2 === 0 ? -3 : 9;
           return (
-            <text key={i} x={CX - r - 6} y={CY + 3} textAnchor="end"
-              className="scope" fontSize={9} fill="var(--text-faint)" letterSpacing="0.05em">
-              {v.toFixed(1)}
-            </text>
+            <g key={i}>
+              <line x1={CX - r} y1={CY - 2} x2={CX - r} y2={CY + 2} stroke="var(--hair)" strokeWidth={1} />
+              <text key={i} x={CX - r - 4} y={CY + yOffset} textAnchor="end"
+                className="scope" fontSize={8.5} fill="var(--text-faint)" letterSpacing="0.05em">
+                {v.toFixed(1)}
+              </text>
+            </g>
           );
         })}
 

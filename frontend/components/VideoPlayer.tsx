@@ -96,16 +96,18 @@ export default function VideoPlayer({
     return (
       <button
         onClick={() => setHidden(false)}
-        className="scope"
+        className="scope btn-seg"
         style={{
-          position: "fixed", bottom: 16, left: 16, zIndex: 40,
+          position: "absolute", bottom: 12, left: 12, zIndex: 30,
           display: "flex", alignItems: "center", gap: 6,
-          height: 28, padding: "0 12px", fontSize: 10,
-          background: "var(--panel)", color: "var(--text-mute)",
-          border: "1px solid var(--hair)", cursor: "pointer", letterSpacing: "0.08em",
+          height: 26, padding: "0 10px", fontSize: 9.5,
+          background: "rgba(6,10,13,0.85)", color: "var(--text-mute)",
+          border: "1px solid var(--hair)", borderRadius: 3,
+          backdropFilter: "blur(8px)",
+          cursor: "pointer", letterSpacing: "0.08em",
         }}
       >
-        <Video size={12} strokeWidth={1.75} /> SHOW CCTV
+        <Video size={11} strokeWidth={1.75} /> SHOW CCTV
       </button>
     );
   }
@@ -116,14 +118,20 @@ export default function VideoPlayer({
 
   return (
     <motion.div
-      style={{ position: "fixed", bottom: 16, left: 16, zIndex: 40 }}
+      style={{
+        position: "absolute", bottom: 12, left: 12, zIndex: 30,
+      }}
       animate={{ width: widgetWidth }}
-      transition={{ type: "spring", stiffness: 180, damping: 22 }}
+      transition={{ type: "spring", stiffness: 220, damping: 24 }}
     >
       <div className="panel" style={{
         borderColor: critical ? "var(--red)" : showTracking ? "var(--sweep-dim)" : "var(--hair)",
+        borderRadius: 4,
+        boxShadow: critical ? "0 0 16px rgba(255,59,59,0.3)" : "0 4px 16px rgba(0,0,0,0.6)",
         overflow: "hidden",
         position: "relative",
+        background: "rgba(6,10,13,0.92)",
+        backdropFilter: "blur(8px)",
       }}>
         <AnimatePresence>
           {critical && (

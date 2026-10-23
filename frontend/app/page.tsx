@@ -427,7 +427,7 @@ export default function Home() {
           {view === "dashboard" ? (
             <motion.div key="dashboard"
               initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-              style={{ flex: 1, minHeight: 0, height: "100%", display: "grid", gridTemplateColumns: "1fr 300px", gap: 6 }}>
+              style={{ flex: 1, minHeight: 0, height: "100%", display: "grid", gridTemplateColumns: "minmax(0, 1fr) 370px", gap: 6 }}>
 
               {/* Left column */}
               <div style={{ display: "flex", flexDirection: "column", gap: 6, minHeight: 0 }}>
@@ -445,8 +445,12 @@ export default function Home() {
                           </span>
                         )}
                       </div>
-                      <div className="scrollbar-thin" style={{ flex: 1, minHeight: 0, padding: 10, overflowY: "auto", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                        <div style={{ width: "100%", maxWidth: 640 }}>
+                      <div style={{
+                        flex: 1, minHeight: 0, padding: 8,
+                        overflow: "hidden", display: "flex", alignItems: "center", justifyContent: "center",
+                        position: "relative"
+                      }}>
+                        <div style={{ width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center", minHeight: 0 }}>
                           <StationMap
                             zones={zones}
                             predictions={data?.crowdguard?.predictions}
@@ -457,6 +461,16 @@ export default function Home() {
                             systemStatus={status}
                           />
                         </div>
+
+                        {/* Docked CCTV widget INSIDE the scope panel — never overlaps the Zone Matrix! */}
+                        {liveMode === "scenario" && (
+                          <VideoPlayer
+                            critical={hasCritical}
+                            videoSrc="/videos/platform.webm"
+                            persons={[]}
+                            showTracking={false}
+                          />
+                        )}
                       </div>
 
                       {/* Demo: not yet started overlay */}
@@ -529,32 +543,79 @@ export default function Home() {
                 )}
               </div>
 
-              {/* Right column */}
+              {/* Right column: Action & Telemetry Panel */}
               <div style={{ display: "flex", flexDirection: "column", gap: 6, minHeight: 0 }}>
 
+                {/* Staged Alert Actions (L3 / L2) - In-flow, NEVER overlapping the Contact Log! */}
+                <AnimatePresence>
+                  {(stagedL3.length > 0 || stagedL2.length > 0) && (
+                    <motion.div
+                      initial={{ opacity: 0, height: 0 }}
+                      animate={{ opacity: 1, height: "auto" }}
+                      exit={{ opacity: 0, height: 0 }}
+                      transition={{ duration: 0.2 }}
+                      style={{ display: "flex", flexDirection: "column", gap: 6, flexShrink: 0 }}
+                    >
+                      {stagedL3.length > 0 && (
+                        <ThresholdConfirmCard
+                          level={3}
+                          items={stagedL3}
+                          shortLabel={shortLabel}
+                          onConfirmAll={confirmAll}
+                          onCancelAll={cancelAll}
+                        />
+                      )}
+                      {stagedL2.length > 0 && (
+                        <ThresholdConfirmCard
+                          level={2}
+                          items={stagedL2}
+                          shortLabel={shortLabel}
+                          onConfirmAll={confirmAll}
+                          onCancelAll={cancelAll}
+                        />
+                      )}
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+
+                {/* Contact Log - Automatically flexes and scrolls */}
                 <div className="panel" style={{ flex: 1, minHeight: 0, display: "flex", flexDirection: "column", overflow: "hidden" }}>
                   <InterventionFeed interventions={allInterventions} />
                 </div>
 
+                {/* Density Forecast - Pinned neatly at bottom */}
                 {data?.crowdguard?.predictions && (
                   <div className="panel" style={{ flexShrink: 0, overflow: "hidden" }}>
-                    <div className="panel-title">DENSITY FORECAST — T+30/60/90s</div>
+                    <div className="panel-title" style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                      <span>DENSITY FORECAST</span>
+                      <span style={{ fontSize: 9, color: "var(--text-faint)", letterSpacing: "0.08em" }}>T+30 / 60 / 90s</span>
+                    </div>
                     <div style={{ padding: "3px 0" }}>
+                      <div className="scope" style={{
+                        display: "flex", alignItems: "center",
+                        padding: "3px 12px", fontSize: 9, color: "var(--text-faint)",
+                        borderBottom: "1px solid var(--hair-dim)", letterSpacing: "0.08em"
+                      }}>
+                        <span style={{ width: 68 }}>ZONE</span>
+                        <span style={{ flex: 1, textAlign: "right" }}>+30s</span>
+                        <span style={{ flex: 1, textAlign: "right" }}>+60s</span>
+                        <span style={{ flex: 1, textAlign: "right" }}>+90s</span>
+                      </div>
                       {["FOB1", "P3", "GATE_B"].map(z => {
                         const pred = data.crowdguard.predictions[z];
                         if (!pred) return null;
                         return (
                           <div key={z} className="scope" style={{
                             display: "flex", alignItems: "center",
-                            padding: "4px 10px", borderBottom: "1px solid var(--hair-dim)",
-                            fontSize: 11,
+                            padding: "5px 12px", borderBottom: "1px solid var(--hair-dim)",
+                            fontSize: 10.5,
                           }}>
-                            <span style={{ color: "var(--text-mute)", width: 44 }}>
+                            <span style={{ color: "var(--text)", width: 68, fontWeight: 600 }}>
                               {config?.zones.find((zc) => zc.id === z)?.short_label}
                             </span>
                             {[pred.t30, pred.t60, pred.t90].map((p, i) => (
-                              <span key={i} style={{ color: BORDER_MAP[p.color], width: 58, textAlign: "right" }}>
-                                +{[30, 60, 90][i]}s:{p.density.toFixed(1)}
+                              <span key={i} style={{ color: BORDER_MAP[p.color], flex: 1, textAlign: "right", fontWeight: 700 }}>
+                                {p.density.toFixed(1)}/m²
                               </span>
                             ))}
                           </div>
@@ -576,18 +637,16 @@ export default function Home() {
       </main>
 
       <PAAnnouncementBanner message={paMessage?.message ?? null} zone={paMessage?.zone ?? ""} onDismiss={dismissPA} />
-      <PhoneNotification notification={phoneNotif} onDismiss={dismissPhone} />
-      <RPFAlert active={rpfActive} boothId="BOOTH-3" distance="120m" />
       <PreWarnBanner active={preWarnActive} intervention={preWarnIv} />
 
-      {/* Unified threshold confirmation — one card per level, listing every
-          zone that tripped it together, instead of a card per zone. */}
+      {/* Tactical HUD Alert Stack — stacked neatly, clear of both sidebars */}
       <div style={{
-        position: "fixed", top: 54, right: 12, zIndex: 60,
-        display: "flex", flexDirection: "column", gap: 8,
+        position: "fixed", bottom: 16, right: 386, zIndex: 50,
+        display: "flex", flexDirection: "column", gap: 10, alignItems: "flex-end",
+        pointerEvents: "none"
       }}>
-        <ThresholdConfirmCard level={3} items={stagedL3} shortLabel={shortLabel} onConfirmAll={confirmAll} onCancelAll={cancelAll} />
-        <ThresholdConfirmCard level={2} items={stagedL2} shortLabel={shortLabel} onConfirmAll={confirmAll} onCancelAll={cancelAll} />
+        <RPFAlert active={rpfActive} boothId="BOOTH-3" distance="120m" />
+        <PhoneNotification notification={phoneNotif} onDismiss={dismissPhone} />
       </div>
 
       <EmergencyOverlay
@@ -595,15 +654,6 @@ export default function Home() {
         sosIntervention={activeSos ?? undefined}
         onDismiss={() => setActiveSos(null)}
       />
-      {/* Floating CCTV widget — only in scenario mode; video mode uses the main split view */}
-      {liveMode === "scenario" && (
-        <VideoPlayer
-          critical={hasCritical}
-          videoSrc="/videos/platform.webm"
-          persons={[]}
-          showTracking={false}
-        />
-      )}
       <SettingsPanel
         open={settingsOpen}
         onClose={() => setSettingsOpen(false)}

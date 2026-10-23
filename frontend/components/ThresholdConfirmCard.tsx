@@ -27,48 +27,85 @@ export default function ThresholdConfirmCard({ level, items, shortLabel, onConfi
     <AnimatePresence>
       {items.length > 0 && (
         <motion.div
-          initial={{ opacity: 0, x: 40 }}
-          animate={{ opacity: 1, x: 0 }}
-          exit={{ opacity: 0, x: 40 }}
-          transition={{ type: "spring", damping: 26, stiffness: 240 }}
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -10 }}
+          transition={{ duration: 0.2, ease: "easeOut" }}
           className="panel scope"
-          style={{ borderColor: color, width: 320 }}
+          style={{
+            borderColor: color,
+            width: "100%",
+            boxShadow: `0 0 16px ${color}20`,
+            borderRadius: 4,
+            overflow: "hidden",
+            flexShrink: 0,
+          }}
         >
-          <div style={{ display: "flex", alignItems: "center", gap: 7, padding: "9px 12px", borderBottom: "1px solid var(--hair-dim)" }}>
-            <motion.div animate={{ opacity: [1, 0.4, 1] }} transition={{ duration: 1, repeat: Infinity }}>
-              <TriangleAlert size={13} color={color} strokeWidth={1.75} />
+          <div style={{
+            display: "flex", alignItems: "center", gap: 8,
+            padding: "8px 12px",
+            background: `${color}10`,
+            borderBottom: `1px solid ${color}30`
+          }}>
+            <motion.div animate={{ opacity: [1, 0.35, 1] }} transition={{ duration: 0.9, repeat: Infinity }}>
+              <TriangleAlert size={14} color={color} strokeWidth={2} />
             </motion.div>
-            <span style={{ fontSize: 11, fontWeight: 700, color, letterSpacing: "0.1em" }}>{title}</span>
-            <span style={{ marginLeft: "auto", fontSize: 9, color: "var(--text-faint)" }}>
+            <span style={{ fontSize: 11, fontWeight: 700, color, letterSpacing: "0.08em" }}>{title}</span>
+            <span style={{
+              marginLeft: "auto", fontSize: 9, fontWeight: 700,
+              padding: "2px 6px", borderRadius: 3,
+              background: `${color}25`, color,
+              border: `1px solid ${color}40`,
+            }}>
               {items.length} ZONE{items.length > 1 ? "S" : ""}
             </span>
           </div>
 
-          <div className="scrollbar-thin" style={{ maxHeight: 160, overflowY: "auto" }}>
+          <div className="scrollbar-thin" style={{ maxHeight: 130, overflowY: "auto" }}>
             {items.map((iv) => (
               <div key={iv.id} style={{
                 padding: "6px 12px", borderBottom: "1px solid var(--hair-dim)",
-                fontSize: 10, color: "var(--text-dim)", lineHeight: 1.4,
+                fontSize: 10, color: "var(--text)", lineHeight: 1.4,
+                display: "flex", alignItems: "baseline", gap: 6,
               }}>
-                <span style={{ color: "var(--text-mute)", fontWeight: 700 }}>{shortLabel(iv.zone)}</span>
-                {" — "}{iv.trigger}
+                <span style={{
+                  color, fontWeight: 700,
+                  fontSize: 10, letterSpacing: "0.04em",
+                  flexShrink: 0,
+                }}>
+                  {shortLabel(iv.zone)}
+                </span>
+                <span style={{ color: "var(--text-dim)", fontSize: 9.5 }}>
+                  {iv.trigger}
+                </span>
               </div>
             ))}
           </div>
 
-          <div style={{ display: "flex", gap: 6, padding: 10 }}>
-            <button onClick={() => onCancelAll(ids)} style={{
-              flex: 1, padding: "7px 0", fontSize: 10, cursor: "pointer",
-              background: "transparent", color: "var(--text-mute)",
-              border: "1px solid var(--hair)", letterSpacing: "0.08em",
-            }}>
+          <div style={{ display: "flex", gap: 8, padding: "8px 10px", background: "var(--panel-2)" }}>
+            <button
+              onClick={() => onCancelAll(ids)}
+              className="btn-seg"
+              style={{
+                flex: 1, padding: "7px 0", fontSize: 10, cursor: "pointer",
+                background: "transparent", color: "var(--text-mute)",
+                border: "1px solid var(--hair)", borderRadius: 3,
+                letterSpacing: "0.08em", fontWeight: 600,
+              }}
+            >
               CANCEL ALL
             </button>
-            <button onClick={() => onConfirmAll(ids)} style={{
-              flex: 1, padding: "7px 0", fontSize: 10, cursor: "pointer",
-              background: `${color}18`, color,
-              border: `1px solid ${color}`, letterSpacing: "0.08em",
-            }}>
+            <button
+              onClick={() => onConfirmAll(ids)}
+              className="btn-seg"
+              style={{
+                flex: 1, padding: "7px 0", fontSize: 10, cursor: "pointer",
+                background: `${color}25`, color,
+                border: `1px solid ${color}`, borderRadius: 3,
+                letterSpacing: "0.08em", fontWeight: 700,
+                boxShadow: `0 0 10px ${color}30`,
+              }}
+            >
               CONFIRM ALL
             </button>
           </div>
