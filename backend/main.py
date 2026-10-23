@@ -29,6 +29,7 @@ from config.schema import StationConfigInput
 from config.defaults import DEFAULT_CONFIG
 from prediction.extrapolator import Extrapolator
 from vision.video_pipeline import VideoPipeline
+from audit.flight_recorder import audit_recorder
 from demo.scenario_runner import (
     ScenarioRunner, get_frame, L1_FIRE_TIME, CRUSH_TIME_HUMAN, HUMAN_RESPONSE_TIME,
     SCENARIO_DURATION,
@@ -62,8 +63,8 @@ pipeline: VideoPipeline | None = None
 # auto-plays in the background before anyone asks for it.
 demo_running: bool = False
 
-engine_cg    = DecisionEngine()
-engine_human = DecisionEngine()
+engine_cg    = DecisionEngine(record_audit=True)
+engine_human = DecisionEngine(record_audit=False)
 extrapolator = Extrapolator()
 scenario     = ScenarioRunner(speed=1.0)
 
@@ -93,6 +94,7 @@ def _do_reset(speed: float = 1.0, max_level: int = 5):
     engine_cg.reset()
     engine_human.reset()
     all_interventions.clear()
+    audit_recorder.reset_session(mode="scenario", max_level=max_level)
     for buf in _density_hist.values():
         buf.clear()
 
@@ -114,6 +116,11 @@ app.add_middleware(
 # Serve uploaded video files for the browser video player
 if _VIDEO_DIR.exists():
     app.mount("/videos", StaticFiles(directory=str(_VIDEO_DIR)), name="videos")
+
+# Serve forensic CCTV evidence snapshots for statutory audit inspection
+_SNAPSHOT_DIR = Path(__file__).parent.parent / "data" / "audit_snapshots"
+_SNAPSHOT_DIR.mkdir(parents=True, exist_ok=True)
+app.mount("/snapshots", StaticFiles(directory=str(_SNAPSHOT_DIR)), name="snapshots")
 
 
 # ── WebSocket ────────────────────────────────────────────────────────────────
@@ -177,6 +184,7 @@ async def live_start(source: str):
     engine_cg.reset()
     engine_human.reset()
     all_interventions.clear()
+    audit_recorder.reset_session(mode="video", max_level=5)
     for buf in _density_hist.values():
         buf.clear()
 
@@ -258,6 +266,49 @@ async def update_config(body: StationConfigInput):
 @app.post("/config/reset")
 async def reset_config():
     return config_store.reset()
+
+
+# ── Statutory CRS Audit Endpoints ─────────────────────────────────────────────
+@app.get("/audit/summary")
+async def get_audit_summary():
+    """Return cryptographic seal status, block counts, and average human reaction time."""
+    return audit_recorder.get_summary()
+
+
+@app.get("/audit/sessions")
+async def get_audit_sessions():
+    """Catalog of all historical incident session logs with classification tags."""
+    return {"sessions": audit_recorder.list_sessions()}
+
+
+@app.get("/audit/dossier")
+async def get_audit_dossier(session_id: str | None = None):
+    """Generate official Commission of Railway Safety (CRS) statutory incident dossier."""
+    return audit_recorder.get_dossier(session_id=session_id)
+
+
+@app.post("/audit/verify")
+async def verify_audit_ledger(session_id: str | None = None):
+    """Verify cryptographic SHA-256 hash-chain integrity of the current or specified session."""
+    target_file = None
+    if session_id:
+        candidate = audit_recorder._dir / f"{session_id}.jsonl"
+        if candidate.exists():
+            target_file = candidate
+    elif len(audit_recorder.events_in_memory) <= 1:
+        all_logs = sorted(audit_recorder._dir.glob("*.jsonl"), key=lambda p: p.stat().st_size, reverse=True)
+        if all_logs and all_logs[0].stat().st_size > 1000:
+            target_file = all_logs[0]
+
+    is_valid, msg, count = audit_recorder.verify_chain(file_path=target_file)
+    active_id = target_file.stem if target_file else audit_recorder.session_id
+    return {
+        "is_valid": is_valid,
+        "message": msg,
+        "verified_blocks": count,
+        "session_id": active_id,
+        "latest_hash": audit_recorder.prev_hash,
+    }
 
 
 # ── Broadcast loop ────────────────────────────────────────────────────────────

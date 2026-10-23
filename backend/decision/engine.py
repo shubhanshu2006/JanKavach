@@ -12,6 +12,7 @@ from decision.interventions import (
     L1_ACTIONS, L2_ACTIONS, L3_ACTIONS,
     PRE_WARN_ACTIONS, SOS_ACTIONS,
 )
+from audit.flight_recorder import audit_recorder
 
 
 def _zone_label(config, zone_id: str) -> str:
@@ -20,8 +21,9 @@ def _zone_label(config, zone_id: str) -> str:
 
 
 class DecisionEngine:
-    def __init__(self, max_level: int = 5):
+    def __init__(self, max_level: int = 5, record_audit: bool = True):
         self._max_level = max_level             # cap — levels above this are skipped
+        self._record_audit = record_audit       # whether to write to statutory flight recorder
         self._fired: set[str] = set()           # zone+level keys already actioned
         self._staged: dict[str, dict] = {}      # L2/L3 interventions pending
         self._pre_warn_zones: set[str] = set()  # zones where PRE_WARN already fired
@@ -71,6 +73,19 @@ class DecisionEngine:
                 )
                 self._fired.add(key_l1)
                 new_interventions.append(iv)
+                if self._record_audit:
+                    audit_recorder.record_event(
+                        "AUTONOMOUS_INTERVENTION",
+                        zone_id,
+                        {
+                            "level": "L1",
+                            "trigger": iv.trigger,
+                            "action": iv.action,
+                            "density": round(density, 2),
+                            "response_time_ms": round(iv.response_time_ms, 2),
+                        },
+                        actor="JAN_KAVACH_AUTONOMOUS_ENGINE",
+                    )
 
             # L2: stage when density crosses L2 threshold
             if (self._max_level >= 2
@@ -92,16 +107,22 @@ class DecisionEngine:
                 )
                 self._staged[key_l2] = {"iv": iv, "staged_at": time.time()}
                 new_interventions.append(iv)
+                if self._record_audit:
+                    audit_recorder.record_event(
+                        "INTERVENTION_STAGED",
+                        zone_id,
+                        {
+                            "intervention_id": iv.id,
+                            "level": "L2",
+                            "trigger": iv.trigger,
+                            "action": iv.action,
+                            "density": round(density, 2),
+                            "countdown_seconds": t.l2_countdown_seconds,
+                        },
+                        actor="JAN_KAVACH_DECISION_ENGINE",
+                    )
 
-            # L3: stage when predicted density in 90s is lethal. Also require the
-            # CURRENT density to have already reached PRE-WARN (the rung directly
-            # below L3) — the 90s-ahead forecast is a linear rate projection with a
-            # hard "+5.0" ceiling, so a brief early uptick from a calm baseline can
-            # otherwise satisfy pred_90 before the situation is even at L1 yet,
-            # staging a platform closure before the PA alert / gate throttle that
-            # are supposed to precede it. (Checked against the threshold value, not
-            # "has PRE-WARN fired", so an L3-capped demo run — max_level=3, which
-            # never evaluates the PRE-WARN branch below — can still reach L3.)
+            # L3: stage when predicted density in 90s is lethal.
             if (self._max_level >= 3
                     and pred_90 >= t.l3_trigger
                     and density >= t.pre_warn_trigger
@@ -121,6 +142,20 @@ class DecisionEngine:
                 )
                 self._staged[key_l3] = {"iv": iv, "staged_at": time.time()}
                 new_interventions.append(iv)
+                if self._record_audit:
+                    audit_recorder.record_event(
+                        "INTERVENTION_STAGED",
+                        zone_id,
+                        {
+                            "intervention_id": iv.id,
+                            "level": "L3",
+                            "trigger": iv.trigger,
+                            "action": iv.action,
+                            "density": round(density, 2),
+                            "predicted_90s": round(pred_90, 2),
+                        },
+                        actor="JAN_KAVACH_DECISION_ENGINE",
+                    )
 
             # PRE_WARN: auto-fire standby alert when density hits pre-warn threshold
             if (self._max_level >= 4
@@ -146,6 +181,19 @@ class DecisionEngine:
                 self._fired.add(key_pre_warn)
                 self._pre_warn_zones.add(zone_id)
                 new_interventions.append(iv)
+                if self._record_audit:
+                    audit_recorder.record_event(
+                        "STANDBY_ALERT_AUTO_FIRED",
+                        zone_id,
+                        {
+                            "level": "PRE_WARN",
+                            "trigger": iv.trigger,
+                            "action": iv.action,
+                            "density": round(density, 2),
+                            "response_time_ms": round(iv.response_time_ms, 2),
+                        },
+                        actor="JAN_KAVACH_AUTONOMOUS_ENGINE",
+                    )
 
             # SOS: auto-fire full emergency dispatch only AFTER pre-warn has already fired for this zone
             if (self._max_level >= 5
@@ -171,10 +219,21 @@ class DecisionEngine:
                 )
                 self._fired.add(key_sos)
                 new_interventions.append(iv)
+                if self._record_audit:
+                    audit_recorder.record_event(
+                        "EMERGENCY_DISPATCH_AUTO_FIRED",
+                        zone_id,
+                        {
+                            "level": "SOS",
+                            "trigger": iv.trigger,
+                            "action": iv.action,
+                            "density": round(density, 2),
+                            "response_time_ms": round(iv.response_time_ms, 2),
+                        },
+                        actor="JAN_KAVACH_AUTONOMOUS_ENGINE",
+                    )
 
         # L2 items never auto-execute — countdown_remaining counts elapsed time pending
-        # (capped) purely as an urgency indicator for the operator. Only confirm()/cancel()
-        # resolve a staged L2 item.
         now = time.time()
         for key, entry in list(self._staged.items()):
             if "_L2" in key:
@@ -183,21 +242,49 @@ class DecisionEngine:
 
         return new_interventions
 
-    def confirm(self, intervention_id: str):
+    def confirm(self, intervention_id: str, operator_id: str = "STATION_SUPERVISOR_NDLS"):
         for key, entry in list(self._staged.items()):
             if entry["iv"].id == intervention_id:
+                latency_ms = (time.time() - entry["staged_at"]) * 1000
                 entry["iv"].status = "confirmed"
                 self._fired.add(key)
                 del self._staged[key]
+                if self._record_audit:
+                    audit_recorder.record_event(
+                        "OPERATOR_CONFIRMED",
+                        entry["iv"].zone,
+                        {
+                            "intervention_id": intervention_id,
+                            "level": entry["iv"].level.name,
+                            "action": entry["iv"].action,
+                            "latency_ms": round(latency_ms, 1),
+                            "operator_id": operator_id,
+                        },
+                        actor=operator_id,
+                    )
                 return True
         return False
 
-    def cancel(self, intervention_id: str):
+    def cancel(self, intervention_id: str, operator_id: str = "STATION_SUPERVISOR_NDLS"):
         for key, entry in list(self._staged.items()):
             if entry["iv"].id == intervention_id:
+                latency_ms = (time.time() - entry["staged_at"]) * 1000
                 entry["iv"].status = "cancelled"
                 self._fired.add(key)
                 del self._staged[key]
+                if self._record_audit:
+                    audit_recorder.record_event(
+                        "OPERATOR_CANCELLED",
+                        entry["iv"].zone,
+                        {
+                            "intervention_id": intervention_id,
+                            "level": entry["iv"].level.name,
+                            "action": entry["iv"].action,
+                            "latency_ms": round(latency_ms, 1),
+                            "operator_id": operator_id,
+                        },
+                        actor=operator_id,
+                    )
                 return True
         return False
 

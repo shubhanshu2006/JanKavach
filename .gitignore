@@ -62,3 +62,9 @@ logs/
 .env
 .env.local
 .env.production
+
+# Audit & Forensic Black-Box artifacts (generated at runtime)
+data/audit_logs/*.jsonl
+data/audit_snapshots/*.jpg
+!data/audit_logs/.gitkeep
+!data/audit_snapshots/.gitkeep
