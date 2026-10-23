@@ -1,0 +1,105 @@
+@import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=JetBrains+Mono:wght@400;500;600;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  /* Ground */
+  --bg:          #04070A;
+  --panel:       #060A0D;
+  --panel-2:     #080F12;
+  --hair:        #12252A;
+  --hair-dim:    #0B1A1D;
+
+  /* Phosphor-tinted text — never plain gray, always drifting toward the sweep hue.
+     Every tier clears WCAG 4.5:1 against --bg (verified: dim 7.68, mute 6.51, faint 4.81). */
+  --text:        #D8F5E8;
+  --text-dim:    #7FA89C;
+  --text-mute:   #6B9C8D;
+  --text-faint:  #568573;
+
+  /* Committed accent: sweep green carries the identity */
+  --sweep:       #29FF8C;
+  --sweep-dim:   #16A35C;
+  --sweep-glow:  rgba(41,255,140,0.35);
+
+  /* Reserved for threshold crossing only */
+  --amber:       #FFB020;
+  --red:         #FF3B3B;
+  --prewarn:     #FF7A1A;
+  --critical:    #FF1A1A;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+html { color-scheme: dark; }
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'JetBrains Mono', 'Share Tech Mono', monospace;
+  font-size: 13px;
+  overflow: hidden;
+  font-variant-numeric: tabular-nums;
+}
+
+.scope { font-family: 'Share Tech Mono', monospace; }
+.jmono  { font-family: 'JetBrains Mono', monospace; }
+
+/* Browser surfaces belong to the world too */
+::selection { background: var(--sweep); color: #04120B; }
+
+*:focus-visible {
+  outline: 2px solid var(--sweep);
+  outline-offset: 2px;
+}
+
+.scrollbar-thin::-webkit-scrollbar { width: 4px; height: 4px; }
+.scrollbar-thin::-webkit-scrollbar-track { background: transparent; }
+.scrollbar-thin::-webkit-scrollbar-thumb { background: var(--hair); }
+.scrollbar-thin::-webkit-scrollbar-thumb:hover { background: var(--text-faint); }
+
+/* Instrument panel chrome — flat, hard-edged, one hairline, no glass */
+.panel {
+  background: var(--panel);
+  border: 1px solid var(--hair);
+}
+.panel-title {
+  padding: 6px 12px;
+  border-bottom: 1px solid var(--hair-dim);
+  background: var(--panel-2);
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 10px;
+  color: var(--text-mute);
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+button { font: inherit; color: inherit; }
+button:disabled { cursor: not-allowed; opacity: 0.5; }
+
+.btn-seg {
+  cursor: pointer;
+  transition: filter 0.12s ease;
+}
+.btn-seg:hover:not(:disabled) { filter: brightness(1.35); }
+.btn-seg:active:not(:disabled) { filter: brightness(0.8); }
+
+.cctv-tile { transition: border-color 0.12s ease, filter 0.12s ease; }
+.cctv-tile:hover { border-color: var(--sweep, #29FF8C); filter: brightness(1.15); }
+
+/* This console is instrumentation for a desktop-class display — a control-room
+   monitor or a demo laptop, never a phone. Lock narrow viewports instead of
+   rendering a silently broken squeeze of the scope and contact log. */
+.desktop-lock { display: none; }
+@media (max-width: 1023px) {
+  .app-shell { display: none; }
+  .desktop-lock { display: flex; }
+}
+
+/* Header never wraps — the station ident is flavor text, first to go when tight. */
+header { flex-wrap: nowrap !important; overflow: hidden; }
+@media (max-width: 1299px) {
+  .station-ident { display: none !important; }
+}
