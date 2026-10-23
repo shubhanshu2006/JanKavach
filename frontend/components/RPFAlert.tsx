@@ -13,13 +13,19 @@ export default function RPFAlert({ active, boothId, distance = "120m" }: Props) 
     <AnimatePresence>
       {active && (
         <motion.div
-          initial={{ opacity: 0, scale: 0.85 }}
-          animate={{ opacity: 1, scale: 1 }}
-          exit={{ opacity: 0, scale: 0.85 }}
-          transition={{ duration: 0.3 }}
-          className="fixed bottom-20 right-4 w-52 pointer-events-none z-50"
+          initial={{ opacity: 0, scale: 0.85, y: 20 }}
+          animate={{ opacity: 1, scale: 1, y: 0 }}
+          exit={{ opacity: 0, scale: 0.85, y: 20 }}
+          transition={{ duration: 0.25 }}
+          className="w-52 pointer-events-none"
         >
-          <div className="panel relative p-4" style={{ borderColor: "var(--red)" }}>
+          <div className="panel relative p-3" style={{
+            borderColor: "var(--red)",
+            borderRadius: 6,
+            background: "rgba(10,5,5,0.94)",
+            backdropFilter: "blur(8px)",
+            boxShadow: "0 0 20px rgba(255,59,59,0.25)",
+          }}>
             <div className="relative w-16 h-16 mx-auto mb-3">
               {[0, 1, 2, 3].map((i) => (
                 <motion.div
