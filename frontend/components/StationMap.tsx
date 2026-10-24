@@ -98,13 +98,25 @@ export default function StationMap({
       >
         <defs>
           <radialGradient id="radarDishGrad" cx="50%" cy="50%" r="50%">
-            <stop offset="0%" stopColor="#29FF8C" stopOpacity="0.06" />
-            <stop offset="60%" stopColor="#29FF8C" stopOpacity="0.02" />
-            <stop offset="100%" stopColor="#04070A" stopOpacity="0.85" />
+            <stop offset="0%" stopColor="#0d2b22" stopOpacity="0.4" />
+            <stop offset="40%" stopColor="#051914" stopOpacity="0.25" />
+            <stop offset="80%" stopColor="#030a0d" stopOpacity="0.85" />
+            <stop offset="100%" stopColor="#010406" stopOpacity="0.98" />
+          </radialGradient>
+          <radialGradient id="hubGlassGrad" cx="50%" cy="40%" r="60%">
+            <stop offset="0%" stopColor="rgba(30,55,48,0.9)" />
+            <stop offset="100%" stopColor="rgba(4,9,13,0.95)" />
           </radialGradient>
           <filter id="radarGlow" x="-20%" y="-20%" width="140%" height="140%">
             <feGaussianBlur stdDeviation="3" result="blur" />
             <feComposite in="SourceGraphic" in2="blur" operator="over" />
+          </filter>
+          <filter id="neonBlipGlow" x="-50%" y="-50%" width="200%" height="200%">
+            <feGaussianBlur stdDeviation="2.5" result="blur" />
+            <feMerge>
+              <feMergeNode in="blur" />
+              <feMergeNode in="SourceGraphic" />
+            </feMerge>
           </filter>
           <marker id="vecHead" markerWidth={6} markerHeight={6} refX={4} refY={3} orient="auto">
             <path d="M0,0 L6,3 L0,6 Z" fill="var(--text-dim)" />
@@ -113,6 +125,12 @@ export default function StationMap({
 
         {/* Scope dish background */}
         <circle cx={CX} cy={CY} r={R_MAX} fill="url(#radarDishGrad)" />
+
+        {/* Subtle concentric grid background rings (every 25px) */}
+        {[30, 60, 90, 120, 150, 180, 210, 240].map((gr, idx) => (
+          <circle key={`grid-ring-${idx}`} cx={CX} cy={CY} r={gr}
+            fill="none" stroke="rgba(41,255,140,0.04)" strokeWidth={0.6} />
+        ))}
 
         {/* Tactical Crosshair Axes & Quadrant Lines */}
         <line x1={CX - R_MAX} y1={CY} x2={CX + R_MAX} y2={CY}
@@ -130,31 +148,32 @@ export default function StationMap({
             fill="none" stroke="rgba(41,255,140,0.22)" strokeWidth={1} strokeDasharray="4 4" />
         ))}
 
-        {/* Outer boundary ring with high-visibility glow */}
-        <circle cx={CX} cy={CY} r={R_MAX + 1.5} fill="none" stroke="rgba(41,255,140,0.16)" strokeWidth={3} />
-        <circle cx={CX} cy={CY} r={R_MAX} fill="none" stroke="rgba(41,255,140,0.5)" strokeWidth={1.5} />
+        {/* Outer boundary ring with high-visibility dual neon trace */}
+        <circle cx={CX} cy={CY} r={R_MAX + 2} fill="none" stroke="rgba(41,255,140,0.12)" strokeWidth={3} />
+        <circle cx={CX} cy={CY} r={R_MAX} fill="none" stroke="rgba(41,255,140,0.55)" strokeWidth={1.5} />
+        <circle cx={CX} cy={CY} r={R_MAX - 3} fill="none" stroke="rgba(41,255,140,0.18)" strokeWidth={0.8} />
 
         {/* Azimuth Rim Ticks (Every 15° & 30°) */}
         {Array.from({ length: 24 }, (_, i) => {
           const deg = i * 15;
           const isMajor = deg % 30 === 0;
           const pOuter = polar(deg, R_MAX);
-          const pInner = polar(deg, R_MAX - (isMajor ? 6.5 : 3.5));
+          const pInner = polar(deg, R_MAX - (isMajor ? 7 : 4));
           return (
             <line
               key={`tick-${deg}`}
               x1={pInner.x} y1={pInner.y} x2={pOuter.x} y2={pOuter.y}
-              stroke={isMajor ? "rgba(41,255,140,0.6)" : "rgba(41,255,140,0.25)"}
-              strokeWidth={isMajor ? 1.4 : 0.8}
+              stroke={isMajor ? "rgba(41,255,140,0.7)" : "rgba(41,255,140,0.28)"}
+              strokeWidth={isMajor ? 1.5 : 0.8}
             />
           );
         })}
 
-        {/* Cardinal Compass Points */}
-        <text x={CX} y={CY - R_MAX - 6} textAnchor="middle" className="scope" fontSize={9} fontWeight={700} fill="var(--sweep)" letterSpacing="0.05em">N</text>
-        <text x={CX + R_MAX + 10} y={CY + 3} textAnchor="start" className="scope" fontSize={8} fontWeight={700} fill="rgba(41,255,140,0.7)" letterSpacing="0.05em">E</text>
-        <text x={CX} y={CY + R_MAX + 13} textAnchor="middle" className="scope" fontSize={8} fontWeight={700} fill="rgba(41,255,140,0.7)" letterSpacing="0.05em">S</text>
-        <text x={CX - R_MAX - 10} y={CY + 3} textAnchor="end" className="scope" fontSize={8} fontWeight={700} fill="rgba(41,255,140,0.7)" letterSpacing="0.05em">W</text>
+        {/* Cardinal Compass Points with glowing HUD styling */}
+        <text x={CX} y={CY - R_MAX - 7} textAnchor="middle" className="scope" fontSize={9.5} fontWeight={800} fill="var(--sweep)" letterSpacing="0.08em">N</text>
+        <text x={CX + R_MAX + 11} y={CY + 3} textAnchor="start" className="scope" fontSize={8.5} fontWeight={800} fill="rgba(41,255,140,0.8)" letterSpacing="0.08em">E</text>
+        <text x={CX} y={CY + R_MAX + 14} textAnchor="middle" className="scope" fontSize={8.5} fontWeight={800} fill="rgba(41,255,140,0.8)" letterSpacing="0.08em">S</text>
+        <text x={CX - R_MAX - 11} y={CY + 3} textAnchor="end" className="scope" fontSize={8.5} fontWeight={800} fill="rgba(41,255,140,0.8)" letterSpacing="0.08em">W</text>
 
         {/* Threshold ladder labels, west side — crisp badges */}
         {!compact && ringValues.map((v, i) => {
@@ -163,16 +182,17 @@ export default function StationMap({
           const valStr = v.toFixed(1);
           return (
             <g key={i}>
-              <line x1={CX - r} y1={CY - 3} x2={CX - r} y2={CY + 3} stroke="rgba(41,255,140,0.5)" strokeWidth={1.2} />
+              <line x1={CX - r} y1={CY - 3} x2={CX - r} y2={CY + 3} stroke="rgba(41,255,140,0.6)" strokeWidth={1.2} />
               <rect
                 x={CX - r - 26}
                 y={CY + yOffset - 8}
                 width={23}
                 height={10}
-                rx={2}
-                fill="rgba(4,7,10,0.88)"
-                stroke="rgba(41,255,140,0.3)"
-                strokeWidth={0.7}
+                rx={2.5}
+                fill="rgba(4,9,14,0.92)"
+                stroke="rgba(41,255,140,0.4)"
+                strokeWidth={0.8}
+                style={{ filter: "drop-shadow(0 1px 4px rgba(0,0,0,0.8))" }}
               />
               <text x={CX - r - 15} y={CY + yOffset} textAnchor="middle"
                 className="scope" fontSize={8} fontWeight={700} fill="var(--sweep)" letterSpacing="0.02em">
@@ -188,13 +208,14 @@ export default function StationMap({
           animate={{ rotate: 360 }}
           transition={{ duration: 7, repeat: Infinity, ease: "linear" }}
         >
-          {[28, 24, 20, 16, 12, 9, 6, 3, 0].map((offset, i) => {
+          {[32, 28, 24, 20, 16, 12, 9, 6, 3, 0].map((offset, i) => {
             const p = polar(-offset, R_MAX);
             const isLead = offset === 0;
             return (
               <line key={i} x1={CX} y1={CY} x2={p.x} y2={p.y}
-                stroke="var(--sweep)" strokeWidth={isLead ? 1.8 : 1}
-                opacity={isLead ? 0.95 : 0.28 - i * 0.028} />
+                stroke="var(--sweep)" strokeWidth={isLead ? 2 : 1}
+                opacity={isLead ? 1 : 0.32 - i * 0.03}
+                style={isLead ? { filter: "drop-shadow(0 0 6px var(--sweep))" } : undefined} />
             );
           })}
         </motion.g>
@@ -216,16 +237,18 @@ export default function StationMap({
         })}
 
         {/* Center Hub — Station Threat Level */}
-        <motion.circle cx={CX} cy={CY} r={HUB_R + 2}
-          fill={threat.color + "18"} stroke={threat.color} strokeWidth={2}
+        {/* Center Hub — Station Threat Level */}
+        <motion.circle cx={CX} cy={CY} r={HUB_R + 3}
+          fill="url(#hubGlassGrad)" stroke={threat.color} strokeWidth={1.8}
           animate={isThreatCritical ? { opacity: [1, 0.45, 1], scale: [1, 1.05, 1] } : {}}
-          transition={{ duration: 0.9, repeat: Infinity }} />
-        <circle cx={CX} cy={CY} r={HUB_R - 3} fill="none" stroke="rgba(41,255,140,0.18)" strokeWidth={1} strokeDasharray="2 2" />
-        <text x={CX} y={CY - 12} textAnchor="middle" className="scope" fontSize={7}
-          fill="var(--text-faint)" letterSpacing="0.1em">STATION</text>
-        <text x={CX} y={CY - 3} textAnchor="middle" className="scope" fontSize={7}
-          fill="var(--text-faint)" letterSpacing="0.1em">THREAT</text>
-        <text x={CX} y={CY + 11} textAnchor="middle" className="scope" fontWeight={700}
+          transition={{ duration: 0.9, repeat: Infinity }}
+          style={{ filter: `drop-shadow(0 0 8px ${threat.color}44)` }} />
+        <circle cx={CX} cy={CY} r={HUB_R - 3} fill="none" stroke="rgba(41,255,140,0.22)" strokeWidth={1} strokeDasharray="2 3" />
+        <text x={CX} y={CY - 12} textAnchor="middle" className="scope" fontSize={7.5} fontWeight={600}
+          fill="var(--text-faint)" letterSpacing="0.12em">STATION</text>
+        <text x={CX} y={CY - 3} textAnchor="middle" className="scope" fontSize={7.5} fontWeight={600}
+          fill="var(--text-faint)" letterSpacing="0.12em">THREAT</text>
+        <text x={CX} y={CY + 11} textAnchor="middle" className="scope" fontWeight={800}
           fontSize={10.5} fill={threat.color} letterSpacing="0.08em">{threat.label}</text>
 
         {/* Contacts */}
@@ -250,21 +273,22 @@ export default function StationMap({
               {/* Leader hairline connecting blip to label */}
               <line
                 x1={p.x} y1={p.y}
-                x2={lp.x + (isRight ? -2 : 2)} y2={lp.y}
-                stroke={color} strokeWidth={0.8} strokeDasharray="2 2" opacity={0.6}
+                x2={lp.x + (isRight ? -3 : 3)} y2={lp.y}
+                stroke={color} strokeWidth={0.8} strokeDasharray="2 2" opacity={0.65}
               />
 
               {/* Pulsing ring for critical/elevated */}
               {(critical || elevated) && (
                 <motion.circle cx={p.x} cy={p.y} r={10} fill="none" stroke={color} strokeWidth={1.5}
-                  animate={{ scale: [1, critical ? 2.2 : 1.7], opacity: [0.85, 0] }}
+                  animate={{ scale: [1, critical ? 2.3 : 1.8], opacity: [0.9, 0] }}
                   transition={{ duration: critical ? 0.9 : 1.4, repeat: Infinity }} style={{ transformOrigin: `${p.x}px ${p.y}px` }} />
               )}
 
               {/* Target reticle halo */}
-              <circle cx={p.x} cy={p.y} r={7.5} fill="none" stroke={color} strokeWidth={0.8} opacity={0.45} />
-              {/* Core blip dot */}
-              <circle cx={p.x} cy={p.y} r={4.5} fill={color} stroke="#04070A" strokeWidth={1.2} />
+              <circle cx={p.x} cy={p.y} r={7.5} fill="none" stroke={color} strokeWidth={0.8} opacity={0.5} />
+              {/* Core blip dot with neon glow */}
+              <circle cx={p.x} cy={p.y} r={4.5} fill={color} stroke="#04090D" strokeWidth={1.5}
+                style={{ filter: `drop-shadow(0 0 5px ${color})` }} />
 
               {id === "FOB1" && (
                 <TriangleAlert
@@ -274,18 +298,44 @@ export default function StationMap({
                 />
               )}
 
-              {/* Zone Label with backdrop shadow for high readability */}
-              <text x={lp.x} y={lp.y - 3} textAnchor={isRight ? "start" : "end"}
-                className="scope" fontSize={compact ? 8.5 : 10} fontWeight={600} fill="var(--text)" letterSpacing="0.04em"
-                style={{ filter: "drop-shadow(0 1px 3px rgba(0,0,0,0.9))" }}>
-                {zoneLabel}
-              </text>
-              {/* Density Value with glowing colored readout */}
-              <text x={lp.x} y={lp.y + (compact ? 8 : 10)} textAnchor={isRight ? "start" : "end"}
-                className="scope" fontWeight={700} fontSize={compact ? 10.5 : 12.5} fill={color}
-                style={{ filter: `drop-shadow(0 0 4px ${color}88)` }}>
-                {densityVal}
-              </text>
+              {/* Tactical HUD Chip Container */}
+              <g transform={`translate(${lp.x + (isRight ? 2 : -2)}, ${lp.y})`}>
+                <rect
+                  x={isRight ? 0 : -(compact ? 54 : 64)}
+                  y={compact ? -12 : -13}
+                  width={compact ? 54 : 64}
+                  height={compact ? 24 : 26}
+                  rx={3}
+                  fill="rgba(4, 9, 14, 0.88)"
+                  stroke={critical ? "var(--red)" : elevated ? color : "rgba(41,255,140,0.22)"}
+                  strokeWidth={critical ? 1.4 : 0.8}
+                  style={{ filter: "drop-shadow(0 2px 6px rgba(0,0,0,0.85))" }}
+                />
+                <text
+                  x={isRight ? 6 : -6}
+                  y={compact ? -2 : -2}
+                  textAnchor={isRight ? "start" : "end"}
+                  className="scope"
+                  fontSize={compact ? 8 : 9}
+                  fontWeight={600}
+                  fill="#D8F5EB"
+                  letterSpacing="0.05em"
+                >
+                  {zoneLabel}
+                </text>
+                <text
+                  x={isRight ? 6 : -6}
+                  y={compact ? 8 : 9.5}
+                  textAnchor={isRight ? "start" : "end"}
+                  className="scope"
+                  fontWeight={700}
+                  fontSize={compact ? 9.5 : 11}
+                  fill={color}
+                  style={{ filter: `drop-shadow(0 0 4px ${color}88)` }}
+                >
+                  {densityVal} <tspan fontSize={compact ? 6.5 : 7.5} fill="var(--text-faint)" fontWeight={400}>/m²</tspan>
+                </text>
+              </g>
 
               {gate && gate !== "open" && (
                 <g transform={`translate(${p.x}, ${p.y})`}>

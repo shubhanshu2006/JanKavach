@@ -342,56 +342,90 @@ export default function Home() {
 
       {/* ── Header ── */}
       <header className="scope" style={{
-        background: "var(--panel-2)",
-        borderBottom: "1px solid var(--hair)",
+        background: "rgba(6, 12, 16, 0.92)",
+        borderBottom: "1px solid rgba(32, 66, 72, 0.55)",
+        boxShadow: "0 1px 0 rgba(41,255,140,0.14)",
         height: 44,
         display: "flex", alignItems: "center",
-        padding: "0 12px", gap: 12, flexShrink: 0,
+        padding: "0 14px", gap: 12, flexShrink: 0,
+        backdropFilter: "blur(16px)",
+        WebkitBackdropFilter: "blur(16px)",
       }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+        {/* Brand identity */}
+        <div style={{ display: "flex", alignItems: "center", gap: 9 }}>
           <SentinelMark />
-          <span style={{ fontSize: 13, color: "var(--text)", letterSpacing: "0.14em" }}>JANKAVACH</span>
-          <span style={{ fontSize: 10, color: "var(--text-faint)" }}>v2.0</span>
+          <div style={{ display: "flex", alignItems: "baseline", gap: 6 }}>
+            <span style={{ fontSize: 13, fontWeight: 800, color: "var(--text)", letterSpacing: "0.14em", textShadow: "0 0 12px rgba(41,255,140,0.35)" }}>
+              JANKAVACH
+            </span>
+            <span style={{ fontSize: 9, fontWeight: 700, color: "var(--sweep-dim)", letterSpacing: "0.08em" }}>
+              v2.0
+            </span>
+          </div>
         </div>
 
-        <div className="station-ident" style={{ display: "flex", alignItems: "center", gap: 12, minWidth: 0 }}>
-          <Divider />
-          <span style={{ fontSize: 11, color: "var(--text-dim)", letterSpacing: "0.08em", whiteSpace: "nowrap" }}>
+        {/* Station ident */}
+        <div className="station-ident" style={{ display: "flex", alignItems: "center", gap: 8, minWidth: 0 }}>
+          <span style={{ width: 4, height: 4, borderRadius: "50%", background: "var(--hair-bright)" }} />
+          <span style={{ fontSize: 10.5, color: "var(--text-mute)", letterSpacing: "0.08em", whiteSpace: "nowrap", fontWeight: 500 }}>
             NDT-CENTRAL / NEW DELHI TERMINAL
           </span>
         </div>
 
-        {/* View tabs — COMPARISON only in scenario mode */}
-        <div style={{ display: "flex", gap: 3, marginLeft: 6 }}>
-          {(["dashboard", ...(liveMode === "scenario" ? ["split"] : [])] as View[]).map(v => (
-            <button key={v} className="btn-seg" onClick={() => setView(v)} style={{
-              height: 26, padding: "0 10px", fontSize: 10,
-              background: view === v ? "var(--hair)" : "transparent",
-              color: view === v ? "var(--text)" : "var(--text-faint)",
-              border: `1px solid ${view === v ? "var(--hair)" : "transparent"}`,
-              letterSpacing: "0.1em",
-            }}>
-              {v === "dashboard" ? "TRACK VIEW" : "COMPARISON"}
-            </button>
-          ))}
+        {/* View segmented control rail */}
+        <div style={{
+          display: "flex",
+          background: "rgba(4, 9, 13, 0.7)",
+          padding: 2,
+          borderRadius: 5,
+          border: "1px solid rgba(32, 66, 72, 0.55)",
+          gap: 2,
+        }}>
+          {(["dashboard", ...(liveMode === "scenario" ? ["split"] : [])] as View[]).map(v => {
+            const isActive = view === v;
+            return (
+              <button key={v} className="btn-seg" onClick={() => setView(v)} style={{
+                height: 24, padding: "0 10px", fontSize: 9.5,
+                background: isActive ? "rgba(41,255,140,0.14)" : "transparent",
+                color: isActive ? "var(--sweep)" : "var(--text-faint)",
+                border: `1px solid ${isActive ? "rgba(41,255,140,0.4)" : "transparent"}`,
+                boxShadow: isActive ? "0 0 10px rgba(41,255,140,0.18)" : "none",
+                borderRadius: 3.5,
+                fontWeight: isActive ? 700 : 500,
+                letterSpacing: "0.1em",
+              }}>
+                {v === "dashboard" ? "TRACK VIEW" : "COMPARISON"}
+              </button>
+            );
+          })}
         </div>
 
-        {/* Demo level toggle — only in scenario mode */}
+        {/* Demo level segmented rail — only in scenario mode */}
         {liveMode === "scenario" && (
-          <>
-            <Divider />
-            <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
-              <span style={{ fontSize: 9, color: "var(--text-faint)", letterSpacing: "0.1em" }}>MAX LEVEL</span>
+          <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+            <div style={{
+              display: "flex", alignItems: "center",
+              background: "rgba(4, 9, 13, 0.7)",
+              padding: "2px 3px",
+              borderRadius: 5,
+              border: "1px solid rgba(32, 66, 72, 0.55)",
+              gap: 2,
+            }}>
+              <span style={{ fontSize: 8.5, color: "var(--text-faint)", letterSpacing: "0.1em", padding: "0 6px", fontWeight: 600 }}>
+                MAX LEVEL
+              </span>
               {DEMO_LEVELS.map(({ level, label, color }) => {
                 const sel = demoMaxLevel === level;
                 return (
                   <button key={level} className="btn-seg" onClick={() => setLevel(level)} style={{
-                    height: 22, padding: "0 7px", fontSize: 9,
+                    height: 21, padding: "0 7px", fontSize: 9,
                     background: sel ? color : "transparent",
-                    color: sel ? "#04120B" : "var(--text-faint)",
-                    border: `1px solid ${sel ? color : "var(--hair)"}`,
+                    color: sel ? "#03080A" : "var(--text-faint)",
+                    border: `1px solid ${sel ? color : "transparent"}`,
+                    boxShadow: sel ? `0 0 8px ${color}77` : "none",
+                    borderRadius: 3,
                     letterSpacing: "0.06em",
-                    fontWeight: sel ? 700 : 400,
+                    fontWeight: sel ? 800 : 500,
                   }}>
                     {label}
                   </button>
@@ -402,92 +436,155 @@ export default function Home() {
             <button className="btn-seg" onClick={resetDemo}
               title="Reset demo — clears the contact log and returns to the start screen"
               style={{
-                display: "flex", alignItems: "center", gap: 5,
-                height: 22, padding: "0 8px", fontSize: 9,
-                background: "transparent", color: "var(--text-faint)",
-                border: "1px solid var(--hair)", letterSpacing: "0.06em",
+                display: "flex", alignItems: "center", gap: 4,
+                height: 25, padding: "0 7px", fontSize: 9,
+                background: "rgba(4, 9, 13, 0.7)", color: "var(--text-faint)",
+                border: "1px solid rgba(32, 66, 72, 0.55)",
+                borderRadius: 4,
+                letterSpacing: "0.06em",
               }}>
               <RefreshCw size={10} strokeWidth={1.75} /> RESET
             </button>
-          </>
+          </div>
         )}
 
         <div style={{ flex: 1 }} />
 
-        <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-          <motion.div
-            style={{ width: 7, height: 7, borderRadius: "50%", background: sc.color }}
-            animate={{ opacity: [1, 0.3, 1] }}
-            transition={{ duration: 1, repeat: Infinity }}
-          />
-          <span style={{ fontSize: 11, color: sc.color, letterSpacing: "0.1em" }}>{sc.label}</span>
+        {/* Unified Integrated Avionics Telemetry Capsule */}
+        <div style={{
+          display: "flex", alignItems: "center", gap: 10,
+          padding: "3px 12px",
+          background: "rgba(4, 9, 13, 0.75)",
+          border: "1px solid rgba(32, 66, 72, 0.55)",
+          borderRadius: 6,
+          boxShadow: "inset 0 1px 0 rgba(255,255,255,0.03)",
+          fontSize: 10.5,
+        }}>
+          {/* Status Indicator */}
+          <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+            <motion.div
+              style={{ width: 6, height: 6, borderRadius: "50%", background: sc.color, boxShadow: `0 0 6px ${sc.color}` }}
+              animate={{ opacity: [1, 0.35, 1] }}
+              transition={{ duration: 1.2, repeat: Infinity }}
+            />
+            <span style={{ fontWeight: 700, color: sc.color, letterSpacing: "0.1em" }}>
+              {sc.label}
+            </span>
+          </div>
+
+          <span style={{ color: "rgba(32, 66, 72, 0.8)", fontSize: 10 }}>│</span>
+
+          {/* Mission Time */}
+          <div style={{ display: "flex", alignItems: "center", gap: 3 }}>
+            <span style={{ color: "var(--text-faint)", fontSize: 9.5 }}>T+</span>
+            <span style={{ color: "var(--text)", fontWeight: 700, fontVariantNumeric: "tabular-nums" }}>
+              {Math.floor(elapsed)}s
+            </span>
+          </div>
+
+          <span style={{ color: "rgba(32, 66, 72, 0.8)", fontSize: 10 }}>│</span>
+
+          {/* Connection State */}
+          <div style={{
+            display: "flex", alignItems: "center", gap: 4,
+            color: connected ? "var(--sweep)" : "var(--red)",
+            fontWeight: 700,
+          }}>
+            {connected ? <Wifi size={11} strokeWidth={2.2} /> : <WifiOff size={11} strokeWidth={2.2} />}
+            <span style={{ letterSpacing: "0.06em", fontSize: 9.5 }}>{connected ? "CONN" : "DISC"}</span>
+          </div>
+
+          <span style={{ color: "rgba(32, 66, 72, 0.8)", fontSize: 10 }}>│</span>
+
+          {/* Real-time Clock */}
+          <span style={{
+            color: "var(--text)",
+            fontWeight: 600,
+            letterSpacing: "0.06em",
+            fontVariantNumeric: "tabular-nums",
+          }}>
+            {clock}
+          </span>
         </div>
 
-        <Divider />
-
-        <span style={{ fontSize: 11, color: "var(--text-faint)" }}>
-          T+<span style={{ color: "var(--text-mute)" }}>{Math.floor(elapsed)}s</span>
-        </span>
-
-        <span style={{ display: "flex", alignItems: "center", gap: 4, fontSize: 11, color: connected ? "var(--sweep)" : "var(--red)" }}>
-          {connected ? <Wifi size={12} strokeWidth={1.75} /> : <WifiOff size={12} strokeWidth={1.75} />}
-          {connected ? "CONN" : "DISC"}
-        </span>
-
-        <span style={{ fontSize: 12, color: "var(--text-dim)", minWidth: 58, textAlign: "right" }}>
-          {clock}
-        </span>
-
-        <Divider />
-
-        {/* Mode buttons */}
-        <div style={{ display: "flex", gap: 4 }}>
+        {/* Mode toggle rail */}
+        <div style={{
+          display: "flex",
+          background: "rgba(4, 9, 13, 0.7)",
+          padding: 2,
+          borderRadius: 5,
+          border: "1px solid rgba(32, 66, 72, 0.55)",
+          gap: 2,
+        }}>
           <button className="btn-seg" onClick={selectDemo} style={{
-            display: "flex", alignItems: "center", gap: 6,
-            height: 28, padding: "0 10px", fontSize: 10,
-            background: liveMode === "scenario" ? "#29FF8C18" : "transparent",
-            color: liveMode === "scenario" ? "#29FF8C" : "var(--text-faint)",
-            border: `1px solid ${liveMode === "scenario" ? "#29FF8C" : "var(--hair)"}`,
+            display: "flex", alignItems: "center", gap: 5,
+            height: 24, padding: "0 9px", fontSize: 9.5,
+            background: liveMode === "scenario" ? "rgba(41,255,140,0.16)" : "transparent",
+            color: liveMode === "scenario" ? "var(--sweep)" : "var(--text-faint)",
+            border: `1px solid ${liveMode === "scenario" ? "rgba(41,255,140,0.4)" : "transparent"}`,
+            boxShadow: liveMode === "scenario" ? "0 0 8px rgba(41,255,140,0.2)" : "none",
+            borderRadius: 3.5,
             letterSpacing: "0.08em",
+            fontWeight: liveMode === "scenario" ? 700 : 500,
           }}>
-            <Play size={11} strokeWidth={1.75} /> DEMO
+            <Play size={10} fill={liveMode === "scenario" ? "var(--sweep)" : "transparent"} strokeWidth={1.75} /> DEMO
           </button>
           <button className="btn-seg" onClick={() => setPickerOpen(true)} style={{
-            display: "flex", alignItems: "center", gap: 6,
-            height: 28, padding: "0 10px", fontSize: 10,
-            background: liveMode === "video" ? "#FFB02018" : "transparent",
-            color: liveMode === "video" ? "#FFB020" : "var(--text-faint)",
-            border: `1px solid ${liveMode === "video" ? "#FFB020" : "var(--hair)"}`,
+            display: "flex", alignItems: "center", gap: 5,
+            height: 24, padding: "0 9px", fontSize: 9.5,
+            background: liveMode === "video" ? "rgba(255,176,32,0.16)" : "transparent",
+            color: liveMode === "video" ? "var(--amber)" : "var(--text-faint)",
+            border: `1px solid ${liveMode === "video" ? "rgba(255,176,32,0.4)" : "transparent"}`,
+            boxShadow: liveMode === "video" ? "0 0 8px rgba(255,176,32,0.2)" : "none",
+            borderRadius: 3.5,
             letterSpacing: "0.08em",
+            fontWeight: liveMode === "video" ? 700 : 500,
           }}>
-            <Video size={11} strokeWidth={1.75} /> {liveMode === "video" && videoSource ? videoSource.label : "VIEW"}
+            <Video size={10} strokeWidth={1.75} /> {liveMode === "video" && videoSource ? videoSource.label : "VIEW"}
           </button>
         </div>
 
-        <Divider />
-
+        {/* CRS Audit cryptographic button */}
         <button
           onClick={() => setAuditOpen(true)}
           title="CRS Statutory Audit & Black-Box Dossier"
           style={{
-            display: "flex", alignItems: "center", gap: 5,
-            height: 26, padding: "0 8px", fontSize: 10,
-            background: "rgba(16, 185, 129, 0.12)",
+            display: "flex", alignItems: "center", gap: 6,
+            height: 28, padding: "0 10px", fontSize: 10,
+            background: "linear-gradient(135deg, rgba(16,185,129,0.22) 0%, rgba(5,150,105,0.1) 100%)",
             color: "#34D399",
-            border: "1px solid rgba(16, 185, 129, 0.35)",
-            borderRadius: 4,
+            border: "1px solid rgba(52,211,153,0.55)",
+            boxShadow: "0 0 12px rgba(16,185,129,0.25), inset 0 1px 0 rgba(255,255,255,0.15)",
+            borderRadius: 5,
             cursor: "pointer",
-            fontWeight: 600,
-            letterSpacing: "0.08em",
+            fontWeight: 700,
+            letterSpacing: "0.09em",
+            transition: "all 0.15s ease",
           }}
         >
-          <ShieldCheck size={12} strokeWidth={2} /> CRS AUDIT
+          <ShieldCheck size={13} strokeWidth={2.2} /> CRS AUDIT
         </button>
 
-        <button onClick={() => setSettingsOpen(true)} title="Station configuration" style={{ background: "none", border: "none", cursor: "pointer" }}>
-          <Settings size={16} color="var(--text-dim)" />
+        {/* Settings Button */}
+        <button
+          onClick={() => setSettingsOpen(true)}
+          title="Station configuration"
+          className="btn-seg"
+          style={{
+            background: "rgba(4, 9, 13, 0.7)",
+            border: "1px solid rgba(32, 66, 72, 0.55)",
+            borderRadius: 5,
+            width: 28, height: 28,
+            cursor: "pointer",
+            display: "flex", alignItems: "center", justifyContent: "center",
+          }}
+        >
+          <Settings size={14} color="var(--text-dim)" />
         </button>
       </header>
+
+      {/* In-flow Pre-Warn Banner — pushes main down smoothly without colliding with panel titles */}
+      <PreWarnBanner active={preWarnActive} intervention={preWarnIv} />
 
       {/* ── Body ── */}
       <main style={{ flex: 1, minHeight: 0, padding: 6, display: "flex" }}>
@@ -548,43 +645,82 @@ export default function Home() {
                             initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
                             style={{
                               position: "absolute", inset: 0,
-                              background: "rgba(4,7,10,0.88)",
+                              background: "rgba(2,6,9,0.7)",
+                              backdropFilter: "blur(12px)",
+                              WebkitBackdropFilter: "blur(12px)",
                               display: "flex", flexDirection: "column",
-                              alignItems: "center", justifyContent: "center", gap: 12,
+                              alignItems: "center", justifyContent: "center",
                               zIndex: 5,
                             }}
                           >
-                            <div className="scope" style={{ fontSize: 10, color: "var(--text-faint)", letterSpacing: "0.12em" }}>
-                              SCENARIO MODE — READY
-                            </div>
-                            <div style={{ display: "flex", gap: 5 }}>
-                              {DEMO_LEVELS.map(({ level, label, color }) => (
-                                <div key={level} className="scope" style={{
-                                  fontSize: 9, padding: "3px 8px",
-                                  color: demoMaxLevel >= level ? color : "var(--text-faint)",
-                                  border: `1px solid ${demoMaxLevel >= level ? color : "var(--hair)"}`,
-                                  background: demoMaxLevel >= level ? `${color}12` : "transparent",
-                                }}>
-                                  {label}
-                                </div>
-                              ))}
-                            </div>
-                            <button
-                              className="btn-seg scope"
-                              onClick={() => launchDemo()}
-                              style={{
-                                display: "flex", alignItems: "center", gap: 8,
-                                padding: "10px 28px", fontSize: 13,
-                                background: "rgba(41,255,140,0.12)",
-                                color: "var(--sweep)",
-                                border: "1px solid var(--sweep)",
-                                letterSpacing: "0.14em",
-                              }}
-                            >
-                              <Play size={14} strokeWidth={1.75} /> START DEMO
-                            </button>
-                            <div className="scope" style={{ fontSize: 9, color: "var(--text-faint)", letterSpacing: "0.08em" }}>
-                              NEW DELHI TERMINAL — INCIDENT RECREATION 2025
+                            <div style={{
+                              padding: "20px 28px",
+                              background: "linear-gradient(180deg, rgba(8,18,24,0.94) 0%, rgba(3,8,12,0.96) 100%)",
+                              border: "1px solid rgba(41,255,140,0.28)",
+                              borderRadius: 6,
+                              boxShadow: "0 8px 32px rgba(0,0,0,0.7), 0 0 24px rgba(41,255,140,0.08)",
+                              display: "flex", flexDirection: "column",
+                              alignItems: "center", justifyContent: "center", gap: 13,
+                              position: "relative",
+                            }}>
+                              {/* Corner HUD framing brackets */}
+                              <div style={{ position: "absolute", top: -1, left: -1, width: 8, height: 8, borderTop: "2px solid var(--sweep)", borderLeft: "2px solid var(--sweep)" }} />
+                              <div style={{ position: "absolute", top: -1, right: -1, width: 8, height: 8, borderTop: "2px solid var(--sweep)", borderRight: "2px solid var(--sweep)" }} />
+                              <div style={{ position: "absolute", bottom: -1, left: -1, width: 8, height: 8, borderBottom: "2px solid var(--sweep)", borderLeft: "2px solid var(--sweep)" }} />
+                              <div style={{ position: "absolute", bottom: -1, right: -1, width: 8, height: 8, borderBottom: "2px solid var(--sweep)", borderRight: "2px solid var(--sweep)" }} />
+
+                              <div className="scope" style={{
+                                display: "flex", alignItems: "center", gap: 7,
+                                fontSize: 10, color: "var(--sweep)", letterSpacing: "0.14em", fontWeight: 700
+                              }}>
+                                <motion.span
+                                  style={{ width: 6, height: 6, borderRadius: "50%", background: "var(--sweep)", boxShadow: "0 0 6px var(--sweep)" }}
+                                  animate={{ opacity: [1, 0.4, 1] }}
+                                  transition={{ duration: 1.2, repeat: Infinity }}
+                                />
+                                SCENARIO MODE — ARMED & READY
+                              </div>
+
+                              <div style={{ display: "flex", gap: 5 }}>
+                                {DEMO_LEVELS.map(({ level, label, color }) => {
+                                  const isActive = demoMaxLevel >= level;
+                                  return (
+                                    <div key={level} className="scope" style={{
+                                      fontSize: 9.5, padding: "3px 9px",
+                                      color: isActive ? color : "var(--text-faint)",
+                                      border: `1px solid ${isActive ? color : "var(--hair)"}`,
+                                      background: isActive ? `${color}18` : "transparent",
+                                      boxShadow: isActive ? `0 0 8px ${color}33` : "none",
+                                      borderRadius: 3,
+                                      fontWeight: isActive ? 700 : 400,
+                                    }}>
+                                      {label}
+                                    </div>
+                                  );
+                                })}
+                              </div>
+
+                              <button
+                                className="btn-seg scope"
+                                onClick={() => launchDemo()}
+                                style={{
+                                  display: "flex", alignItems: "center", gap: 8,
+                                  padding: "10px 30px", fontSize: 13,
+                                  background: "linear-gradient(180deg, rgba(41,255,140,0.22) 0%, rgba(22,163,92,0.12) 100%)",
+                                  color: "var(--sweep)",
+                                  border: "1px solid var(--sweep)",
+                                  boxShadow: "0 0 16px rgba(41,255,140,0.3), inset 0 1px 0 rgba(255,255,255,0.2)",
+                                  letterSpacing: "0.14em",
+                                  fontWeight: 700,
+                                  borderRadius: 4,
+                                }}
+                              >
+                                <Play size={13} fill="var(--sweep)" strokeWidth={0} /> START DEMO
+                              </button>
+
+                              <div className="scope" style={{ fontSize: 9, color: "var(--text-mute)", letterSpacing: "0.08em" }}>
+                                NEW DELHI TERMINAL — INCIDENT RECREATION 2025
+                              </div>
                             </div>
                           </motion.div>
                         )}
@@ -792,35 +928,46 @@ export default function Home() {
                 {data?.crowdguard?.predictions && (
                   <div className="panel" style={{ flexShrink: 0, overflow: "hidden" }}>
                     <div className="panel-title" style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                      <span>DENSITY FORECAST</span>
+                      <span style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                        <span style={{ width: 5, height: 5, borderRadius: "50%", background: "var(--sweep)", boxShadow: "0 0 6px var(--sweep)" }} />
+                        DENSITY FORECAST
+                      </span>
                       <span style={{ fontSize: 9, color: "var(--text-faint)", letterSpacing: "0.08em" }}>T+30 / 60 / 90s</span>
                     </div>
-                    <div style={{ padding: "3px 0" }}>
+                    <div style={{ padding: "2px 0" }}>
                       <div className="scope" style={{
                         display: "flex", alignItems: "center",
-                        padding: "3px 12px", fontSize: 9, color: "var(--text-faint)",
+                        padding: "4px 12px", fontSize: 9, color: "var(--text-faint)",
                         borderBottom: "1px solid var(--hair-dim)", letterSpacing: "0.08em"
                       }}>
-                        <span style={{ width: 68 }}>ZONE</span>
+                        <span style={{ width: 72 }}>ZONE</span>
                         <span style={{ flex: 1, textAlign: "right" }}>+30s</span>
                         <span style={{ flex: 1, textAlign: "right" }}>+60s</span>
                         <span style={{ flex: 1, textAlign: "right" }}>+90s</span>
                       </div>
-                      {["FOB1", "P3", "GATE_B"].map(z => {
+                      {["FOB1", "P3", "GATE_B"].map((z, rowIdx) => {
                         const pred = data.crowdguard.predictions[z];
                         if (!pred) return null;
                         return (
                           <div key={z} className="scope" style={{
                             display: "flex", alignItems: "center",
-                            padding: "5px 12px", borderBottom: "1px solid var(--hair-dim)",
+                            padding: "6px 12px",
+                            borderBottom: rowIdx === 2 ? "none" : "1px solid var(--hair-dim)",
+                            background: rowIdx % 2 === 0 ? "rgba(255,255,255,0.015)" : "transparent",
                             fontSize: 10.5,
                           }}>
-                            <span style={{ color: "var(--text)", width: 68, fontWeight: 600 }}>
+                            <span style={{ color: "var(--text)", width: 72, fontWeight: 700, letterSpacing: "0.04em" }}>
                               {config?.zones.find((zc) => zc.id === z)?.short_label}
                             </span>
                             {[pred.t30, pred.t60, pred.t90].map((p, i) => (
-                              <span key={i} style={{ color: BORDER_MAP[p.color], flex: 1, textAlign: "right", fontWeight: 700 }}>
-                                {p.density.toFixed(1)}/m²
+                              <span key={i} style={{
+                                color: BORDER_MAP[p.color],
+                                flex: 1,
+                                textAlign: "right",
+                                fontWeight: 700,
+                                textShadow: `0 0 6px ${BORDER_MAP[p.color]}55`
+                              }}>
+                                {p.density.toFixed(1)} <span style={{ fontSize: 8.5, color: "var(--text-faint)", fontWeight: 400 }}>/m²</span>
                               </span>
                             ))}
                           </div>
@@ -842,7 +989,6 @@ export default function Home() {
       </main>
 
       <PAAnnouncementBanner message={paMessage?.message ?? null} zone={paMessage?.zone ?? ""} onDismiss={dismissPA} />
-      <PreWarnBanner active={preWarnActive} intervention={preWarnIv} />
 
       {/* Tactical HUD Alert Stack — stacked neatly, clear of both sidebars */}
       <div style={{
@@ -887,9 +1033,9 @@ function Divider() {
 function SentinelMark() {
   return (
     <svg width={22} height={22} viewBox="0 0 22 22" style={{ flexShrink: 0 }}>
-      <rect x={0.5} y={0.5} width={21} height={21} fill="var(--panel)" stroke="var(--sweep)" strokeWidth={1} />
-      <circle cx={11} cy={11} r={6.5} fill="none" stroke="var(--sweep)" strokeWidth={1} opacity={0.5} />
-      <circle cx={11} cy={11} r={2} fill="var(--sweep)" />
+      <rect x={0.5} y={0.5} width={21} height={21} rx={4.5} fill="rgba(6, 14, 18, 0.95)" stroke="var(--sweep)" strokeWidth={1.2} />
+      <circle cx={11} cy={11} r={6.5} fill="none" stroke="var(--sweep)" strokeWidth={1} opacity={0.4} strokeDasharray="2 2" />
+      <circle cx={11} cy={11} r={2.5} fill="var(--sweep)" style={{ filter: "drop-shadow(0 0 4px var(--sweep))" }} />
     </svg>
   );
 }

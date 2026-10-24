@@ -53,8 +53,37 @@ export default function InterventionFeed({ interventions }: Props) {
         </AnimatePresence>
         <div ref={bottomRef} />
         {logged.length === 0 && (
-          <div className="scope" style={{ padding: "16px 12px", fontSize: 10, color: "var(--text-faint)", letterSpacing: "0.1em" }}>
-            NO CONTACTS LOGGED
+          <div className="scope" style={{
+            padding: "32px 16px",
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            justifyContent: "center",
+            gap: 10,
+            color: "var(--text-faint)",
+            textAlign: "center"
+          }}>
+            <div style={{
+              display: "flex",
+              alignItems: "center",
+              gap: 8,
+              padding: "4px 10px",
+              background: "rgba(41,255,140,0.06)",
+              border: "1px solid rgba(41,255,140,0.2)",
+              borderRadius: 4,
+            }}>
+              <motion.span
+                style={{ width: 6, height: 6, borderRadius: "50%", background: "var(--sweep)", display: "inline-block" }}
+                animate={{ opacity: [1, 0.3, 1] }}
+                transition={{ duration: 1.4, repeat: Infinity }}
+              />
+              <span style={{ fontSize: 9.5, color: "var(--sweep)", fontWeight: 700, letterSpacing: "0.12em" }}>
+                SENSORS ARMED · TELEMETRY STANDBY
+              </span>
+            </div>
+            <div style={{ fontSize: 9, color: "var(--text-faint)", letterSpacing: "0.08em", maxWidth: 220, lineHeight: 1.5 }}>
+              CONTINUOUS SPATIAL RADAR MONITORING (12 ACTIVE ZONES)
+            </div>
           </div>
         )}
       </div>
@@ -70,32 +99,53 @@ function LogRow({ iv, shortLabel }: { iv: Intervention; shortLabel: (zoneId: str
 
   return (
     <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: isDimmed ? 0.4 : 1 }}
+      initial={{ opacity: 0, x: -4 }}
+      animate={{ opacity: isDimmed ? 0.45 : 1, x: 0 }}
       exit={{ opacity: 0 }}
-      transition={{ duration: 0.15 }}
+      transition={{ duration: 0.18 }}
       className="scope"
       style={{
         borderBottom: "1px solid var(--hair-dim)",
-        padding: "6px 12px",
+        borderLeft: `3px solid ${isDimmed ? "var(--hair)" : levelColor}`,
+        padding: "7px 12px",
+        background: isDimmed ? "transparent" : "rgba(255,255,255,0.012)",
+        transition: "background 0.15s ease",
       }}
     >
-      <div style={{ display: "flex", alignItems: "center", gap: 7, marginBottom: 2 }}>
-        <span style={{ width: 5, height: 5, borderRadius: "50%", background: isDimmed ? "var(--text-faint)" : levelColor, flexShrink: 0 }} />
-        <span style={{ fontSize: 10, color: isDimmed ? "var(--text-faint)" : levelColor, letterSpacing: "0.08em" }}>
+      <div style={{ display: "flex", alignItems: "center", gap: 7, marginBottom: 3 }}>
+        <span style={{
+          width: 5, height: 5, borderRadius: "50%",
+          background: isDimmed ? "var(--text-faint)" : levelColor,
+          boxShadow: isDimmed ? "none" : `0 0 6px ${levelColor}`,
+          flexShrink: 0
+        }} />
+        <span style={{
+          fontSize: 9.5, fontWeight: 700,
+          color: isDimmed ? "var(--text-faint)" : levelColor,
+          letterSpacing: "0.08em"
+        }}>
           {LEVEL_TAG[iv.level]}
         </span>
-        <span style={{ fontSize: 9, color: sMeta.color, letterSpacing: "0.06em" }}>
+        <span style={{
+          fontSize: 8.5,
+          color: sMeta.color,
+          letterSpacing: "0.06em",
+          padding: "1px 4px",
+          background: "rgba(0,0,0,0.3)",
+          borderRadius: 2,
+        }}>
           {sMeta.label}
         </span>
-        <span style={{ fontSize: 9, color: "var(--text-faint)", marginLeft: "auto" }}>{iv.timestamp}</span>
+        <span style={{ fontSize: 9, color: "var(--text-faint)", marginLeft: "auto", fontFamily: "'Share Tech Mono', monospace" }}>
+          {iv.timestamp}
+        </span>
       </div>
-      <div style={{ fontSize: 10, color: isDimmed ? "var(--text-faint)" : "var(--text-dim)", letterSpacing: "0.02em", paddingLeft: 12 }}>
-        <span style={{ color: isDimmed ? "var(--text-faint)" : "var(--text-mute)" }}>{zone} · </span>
+      <div style={{ fontSize: 10.5, color: isDimmed ? "var(--text-faint)" : "var(--text)", letterSpacing: "0.02em", paddingLeft: 12 }}>
+        <span style={{ color: isDimmed ? "var(--text-faint)" : "var(--sweep)", fontWeight: 600 }}>{zone} · </span>
         {iv.action.split(":")[0]}
       </div>
       {iv.response_time_ms > 0 && (
-        <div style={{ fontSize: 9, color: "var(--text-faint)", marginTop: 1, paddingLeft: 12 }}>
+        <div style={{ fontSize: 8.5, color: "var(--text-faint)", marginTop: 2, paddingLeft: 12 }}>
           RSP {iv.response_time_ms.toFixed(0)}ms
         </div>
       )}

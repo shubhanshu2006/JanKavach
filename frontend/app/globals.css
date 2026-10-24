@@ -5,24 +5,25 @@
 @tailwind utilities;
 
 :root {
-  /* Ground */
-  --bg:          #04070A;
-  --panel:       #060A0D;
-  --panel-2:     #080F12;
-  --hair:        #12252A;
-  --hair-dim:    #0B1A1D;
+  /* Ground - deep obsidian space */
+  --bg:          #030608;
+  --bg-gradient: radial-gradient(circle at 50% 0%, #09171d 0%, #030608 70%, #010304 100%);
+  --panel:       rgba(7, 13, 17, 0.78);
+  --panel-2:     rgba(10, 18, 23, 0.88);
+  --hair:        rgba(32, 66, 72, 0.65);
+  --hair-dim:    rgba(16, 36, 42, 0.5);
+  --hair-bright: rgba(41, 255, 140, 0.28);
 
-  /* Phosphor-tinted text — never plain gray, always drifting toward the sweep hue.
-     Every tier clears WCAG 4.5:1 against --bg (verified: dim 7.68, mute 6.51, faint 4.81). */
-  --text:        #D8F5E8;
-  --text-dim:    #7FA89C;
-  --text-mute:   #6B9C8D;
-  --text-faint:  #568573;
+  /* Phosphor-tinted text */
+  --text:        #E2FAF0;
+  --text-dim:    #8CBFB1;
+  --text-mute:   #70A898;
+  --text-faint:  #4E7D6D;
 
   /* Committed accent: sweep green carries the identity */
   --sweep:       #29FF8C;
   --sweep-dim:   #16A35C;
-  --sweep-glow:  rgba(41,255,140,0.35);
+  --sweep-glow:  rgba(41,255,140,0.38);
 
   /* Reserved for threshold crossing only */
   --amber:       #FFB020;
@@ -37,11 +38,14 @@ html { color-scheme: dark; }
 
 body {
   background: var(--bg);
+  background-image: var(--bg-gradient);
+  background-attachment: fixed;
   color: var(--text);
   font-family: 'JetBrains Mono', 'Share Tech Mono', monospace;
   font-size: 13px;
   overflow: hidden;
   font-variant-numeric: tabular-nums;
+  -webkit-font-smoothing: antialiased;
 }
 
 .scope { font-family: 'Share Tech Mono', monospace; }
@@ -57,19 +61,22 @@ body {
 
 .scrollbar-thin::-webkit-scrollbar { width: 4px; height: 4px; }
 .scrollbar-thin::-webkit-scrollbar-track { background: transparent; }
-.scrollbar-thin::-webkit-scrollbar-thumb { background: var(--hair); }
-.scrollbar-thin::-webkit-scrollbar-thumb:hover { background: var(--text-faint); }
+.scrollbar-thin::-webkit-scrollbar-thumb { background: rgba(41, 255, 140, 0.18); border-radius: 2px; }
+.scrollbar-thin::-webkit-scrollbar-thumb:hover { background: var(--sweep-dim); }
 
-/* Instrument panel chrome — high-tech, subtle depth, crisp hairline */
+/* Instrument panel chrome — high-tech, subtle glass depth, crisp hairline */
 .panel {
   background: var(--panel);
   border: 1px solid var(--hair);
-  border-radius: 4px;
+  border-radius: 5px;
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.04);
 }
 .panel-title {
   padding: 7px 14px;
   border-bottom: 1px solid var(--hair-dim);
-  background: var(--panel-2);
+  background: linear-gradient(90deg, rgba(13, 24, 30, 0.95) 0%, rgba(8, 16, 21, 0.8) 100%);
   font-family: 'Share Tech Mono', monospace;
   font-size: 10px;
   font-weight: 600;
@@ -83,20 +90,27 @@ button:disabled { cursor: not-allowed; opacity: 0.5; }
 
 .btn-seg {
   cursor: pointer;
-  transition: all 0.15s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: all 0.18s cubic-bezier(0.16, 1, 0.3, 1);
   border-radius: 3px;
+  font-family: 'Share Tech Mono', monospace;
 }
 .btn-seg:hover:not(:disabled) {
-  filter: brightness(1.25);
-  box-shadow: 0 0 8px rgba(41,255,140,0.15);
+  filter: brightness(1.2);
+  border-color: var(--sweep) !important;
+  box-shadow: 0 0 10px rgba(41, 255, 140, 0.18);
 }
 .btn-seg:active:not(:disabled) {
-  filter: brightness(0.85);
+  filter: brightness(0.9);
   transform: translateY(0.5px);
 }
 
-.cctv-tile { transition: border-color 0.12s ease, filter 0.12s ease; }
-.cctv-tile:hover { border-color: var(--sweep, #29FF8C); filter: brightness(1.15); }
+.cctv-tile { transition: border-color 0.15s ease, filter 0.15s ease, box-shadow 0.15s ease; }
+.cctv-tile:hover {
+  border-color: var(--sweep, #29FF8C);
+  filter: brightness(1.15);
+  box-shadow: 0 0 12px rgba(41, 255, 140, 0.2);
+}
+
 
 /* This console is instrumentation for a desktop-class display — a control-room
    monitor or a demo laptop, never a phone. Lock narrow viewports instead of
