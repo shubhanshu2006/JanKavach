@@ -13,10 +13,17 @@ REST       /intervention/* → confirm / cancel staged interventions
 
 import asyncio
 import json
+import os
+import sys
 from contextlib import asynccontextmanager
 from pathlib import Path
 from typing import Literal
 from urllib.parse import quote
+
+# Ensure backend directory is in sys.path for reliable imports in all runtimes
+_BACKEND_DIR = Path(__file__).resolve().parent
+if str(_BACKEND_DIR) not in sys.path:
+    sys.path.insert(0, str(_BACKEND_DIR))
 
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
@@ -105,22 +112,50 @@ async def lifespan(app: FastAPI):
     asyncio.create_task(broadcast_loop())
     yield
 
-app = FastAPI(lifespan=lifespan)
+app = FastAPI(
+    title="JanKavach API",
+    description="Crowd safety, predictive density extrapolation, and statutory CRS audit platform.",
+    version="1.0.0",
+    lifespan=lifespan,
+)
+
+cors_origins_env = os.environ.get("ALLOWED_ORIGINS", "*")
+if cors_origins_env == "*" or not cors_origins_env.strip():
+    allow_origins = ["*"]
+else:
+    allow_origins = [o.strip() for o in cors_origins_env.split(",") if o.strip()]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=allow_origins,
+    allow_credentials=True if allow_origins != ["*"] else False,
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# Ensure data directories exist
+_VIDEO_DIR.mkdir(parents=True, exist_ok=True)
+_SNAPSHOT_DIR = Path(__file__).resolve().parent.parent / "data" / "audit_snapshots"
+_SNAPSHOT_DIR.mkdir(parents=True, exist_ok=True)
 
 # Serve uploaded video files for the browser video player
 if _VIDEO_DIR.exists():
     app.mount("/videos", StaticFiles(directory=str(_VIDEO_DIR)), name="videos")
 
 # Serve forensic CCTV evidence snapshots for statutory audit inspection
-_SNAPSHOT_DIR = Path(__file__).parent.parent / "data" / "audit_snapshots"
-_SNAPSHOT_DIR.mkdir(parents=True, exist_ok=True)
 app.mount("/snapshots", StaticFiles(directory=str(_SNAPSHOT_DIR)), name="snapshots")
+
+
+# ── Health check ─────────────────────────────────────────────────────────────
+@app.get("/")
+@app.get("/health")
+async def health_check():
+    return {
+        "status": "online",
+        "service": "JanKavach Backend",
+        "mode": mode,
+        "version": "1.0.0",
+    }
 
 
 # ── WebSocket ────────────────────────────────────────────────────────────────
@@ -450,3 +485,11 @@ def _system_status(zones: dict) -> str:
     if max_d >= t.density_warning:
         return "monitoring"
     return "normal"
+
+
+if __name__ == "__main__":
+    import uvicorn
+    port = int(os.environ.get("PORT", 8000))
+    print(f"[JanKavach] Starting server on 0.0.0.0:{port}...", flush=True)
+    uvicorn.run("main:app", host="0.0.0.0", port=port)
+
